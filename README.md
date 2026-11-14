@@ -25,6 +25,6 @@ Socle prêt à coder : config Vite + React + TypeScript strict, styles de base (
 - [x] 00 Socle du projet (fourni : `npm run build` et `npm test` passent)
 - [ ] 00 Premier déploiement Vercel (à faire par toi)
 - [x] 01 Tokens et styles de base (fournis) — [ ] police vérifiée dans DevTools
-- [ ] 02 Landing v2 (hero 2 colonnes, halo pêche, scroll reveal, logo) · [ ] 03 Données · [ ] 04 Forecast · [ ] 05 Décisions
+- [ ] 02 Landing v2 (hero 2 colonnes, halo pêche, scroll reveal, logo) · [x] 03 Données · [x] 04 Forecast · [ ] 05 Décisions
 - [ ] 06 Coque · [ ] 07 Saisie · [ ] 08 Prévision · [ ] 09 Puis-je ? · [ ] 10 Dettes
 - [ ] 11 IA serverless · [ ] 12 Voix (bonus) · [ ] 13 Soumission
