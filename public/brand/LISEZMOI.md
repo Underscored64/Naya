@@ -1,0 +1,3 @@
+- `logo-mark.png` : symbole seul (N stylisé noir/corail). À utiliser dans l'UI (navbar, favicon dérivé plus tard).
+- `brand-sheet-reference.png` : planche de présentation de marque (logo + nom + palette + pictos). **Image de référence pour l'humain, jamais à afficher dans l'appli.** Le bloc "Naya" + wordmark dans l'UI se recompose en HTML/texte (`.display`), pas en insérant cette image.
+- Les deux fichiers sont lourds (~1 Mo chacun, PNG non optimisé). À compresser (TinyPNG, squoosh.app) ou reconvertir en SVG avant mise en production si le temps le permet ; sans urgence pour samedi.
