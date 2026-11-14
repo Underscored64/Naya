@@ -1,0 +1,302 @@
+/* App-shell layout for /app. Reuses tokens from tokens.css and utilities from
+   base.css. Floating UI: floating cards, soft shadows, 20px radius.
+   Built for 375px wide first; no horizontal scroll. */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: calc(44px + var(--space-5)); /* room for the floating tab bar */
+}
+
+/* Top bar: brand + settings */
+.app-topbar {
+  position: sticky;
+  top: var(--space-3);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--silver);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-float);
+  max-width: 520px;
+  width: calc(100% - var(--space-5));
+  margin: var(--space-4) auto 0;
+}
+
+.app-topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.app-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 520px;
+  width: 100%;
+  margin-top: var(--space-5);
+}
+
+.app-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Generic small icon button (44px touch target) */
+.app-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+}
+.app-iconbtn:hover {
+  background: var(--accent-soft);
+}
+
+/* Accueil cards */
+.app-balance__label,
+.app-deadline__label,
+.app-alert__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--silver-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.app-balance__value {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-alert {
+  border-left: 4px solid var(--danger);
+}
+.app-alert p {
+  margin-top: var(--space-2);
+  font-size: 1.05rem;
+}
+
+.app-deadline p {
+  margin-top: var(--space-2);
+  color: var(--ink);
+}
+
+/* Needs list */
+.app-needs__title {
+  font-size: 1.25rem;
+}
+.app-needs__list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.app-need {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--silver);
+  border-radius: 16px;
+  background: var(--bg);
+}
+.app-need__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.app-need__label {
+  font-weight: 600;
+}
+.app-need__amount {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Priority chips */
+.app-need__prio,
+.app-prio-pick--on {
+  font-size: 0.75rem;
+  padding: 0 var(--space-2);
+  min-height: 28px;
+  border-radius: 999px;
+}
+.app-need__prio--indispensable {
+  background: #fdecec;
+  color: var(--danger);
+}
+.app-need__prio--important {
+  background: var(--accent-soft);
+  color: #b06a5e;
+}
+.app-need__prio--confort {
+  background: #eaf3ee;
+  color: var(--ok);
+}
+
+/* Quick-add form */
+.app-need-form {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--silver);
+}
+.app-input {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--silver);
+  border-radius: 14px;
+  background: var(--surface);
+  font: inherit;
+}
+.app-need-form__row {
+  display: flex;
+  gap: var(--space-3);
+}
+.app-need-form__row .app-input--amount {
+  flex: 1;
+}
+.app-need-form__row .app-input--date {
+  flex: 1;
+}
+.app-need-form__prios {
+  display: flex;
+  gap: var(--space-2);
+}
+.app-prio-pick {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  font-size: 0.9rem;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--silver);
+}
+.app-prio-pick--on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.app-need-form__add {
+  margin-top: var(--space-1);
+}
+.app-need-form__add:disabled {
+  opacity: 0.5;
+}
+
+/* Placeholder */
+.app-placeholder__title {
+  font-size: 1.25rem;
+}
+.app-placeholder p {
+  margin-top: var(--space-2);
+  color: var(--silver-dark);
+}
+
+/* Floating bottom tab bar */
+.app-tabbar {
+  position: fixed;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  width: calc(100% - var(--space-5));
+  max-width: 460px;
+  padding: var(--space-2);
+  border: 1px solid var(--silver);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-float);
+}
+.app-tab {
+  flex: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: var(--space-1);
+  border: none;
+  background: transparent;
+  color: var(--silver-dark);
+  border-radius: 999px;
+}
+.app-tab__label {
+  font-size: 0.7rem;
+}
+.app-tab--active {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Settings slide-up sheet */
+.app-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+}
+.app-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(17, 18, 20, 0.4);
+  cursor: pointer;
+}
+.app-sheet__panel {
+  position: relative;
+  width: 100%;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--silver);
+  border-radius: 24px 24px 0 0;
+  box-shadow: var(--shadow-float);
+}
+.app-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-sheet__head h2 {
+  font-size: 1.2rem;
+}
+.app-sheet__reset {
+  width: 100%;
+}
