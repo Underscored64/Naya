@@ -1,20 +1,21 @@
 import { Link } from "react-router-dom";
+import FloatingCards from "./FloatingCards";
 
 export default function Hero() {
   return (
     <header className="landing-hero container">
-      <h1 className="display landing-hero__title">
-        Savoir avant lundi
-        <br />
-        si vous aurez assez.
-      </h1>
-      <p className="landing-hero__subtitle">
-        Naya suit vos ventes et vos dettes, et prévoit chaque jour de la
-        semaine pour vous dire à l'avance s'il vous manquera de l'argent.
-      </p>
-      <Link to="/app" className="btn btn-primary landing-hero__cta">
-        Essayer la démo
-      </Link>
+      <div className="landing-hero__text">
+        <h1 className="display landing-hero__title">Savoir avant lundi.</h1>
+        <p className="landing-hero__accent">Décider en toute sérénité.</p>
+        <p className="landing-hero__subtitle">
+          Votre argent, vos échéances et vos prochaines dépenses, enfin sous
+          contrôle.
+        </p>
+        <Link to="/app" className="btn btn-primary landing-hero__cta">
+          Essayer la démo
+        </Link>
+      </div>
+      <FloatingCards />
     </header>
   );
 }

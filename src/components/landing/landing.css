@@ -1,5 +1,8 @@
 /* Landing-only layout + animation. Reuses tokens from tokens.css.
-   prefers-reduced-motion is neutralized globally in base.css. */
+   All motion (bob, entrance, scroll-reveal) is scoped under
+   @media (prefers-reduced-motion: no-preference) so that, under reduced
+   motion, every element is shown in place statically. base.css also
+   neutralizes transitions/animations globally as a fallback. */
 
 .landing-page {
   display: flex;
@@ -9,7 +12,7 @@
   padding-bottom: var(--space-7);
 }
 
-/* Sticky blurred pill navbar */
+/* ---- Sticky blurred pill navbar ---- */
 .landing-nav {
   position: sticky;
   top: var(--space-4);
@@ -23,64 +26,103 @@
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-5);
   min-height: 44px;
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-5);
   border: 1px solid var(--silver);
   border-radius: 999px;
   background: color-mix(in srgb, var(--surface) 70%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-float);
+  /* silver hairline + soft two-layer shadow + peach halo, all additive */
+  box-shadow: var(--shadow-float), 0 18px 40px -22px rgba(224, 175, 160, 0.55);
 }
 
 .landing-nav__brand {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-weight: 600;
+}
+
+.landing-nav__mark {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+
+.landing-nav__word {
+  font-size: 1.25rem;
+  font-weight: 400; /* Naya in display, regular weight per section 4 */
   letter-spacing: -0.01em;
 }
 
 .landing-nav__cta {
   min-height: 36px;
   padding: 0 var(--space-4);
+  font-size: 0.95rem;
 }
 
-/* Hero */
+/* ---- Hero: two columns from tablet up, stacked below 640px ---- */
 .landing-hero {
   padding-top: var(--space-7);
-  text-align: center;
-  max-width: 720px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-7);
+  align-items: center;
 }
 
-.landing-hero__title {
-  font-size: clamp(2.4rem, 9vw, 4.5rem);
-}
-
-.landing-hero__subtitle {
-  margin-top: var(--space-4);
-  font-size: 1.125rem;
-  color: var(--silver-dark);
-}
-
-.landing-hero__cta {
-  margin-top: var(--space-5);
-  font-size: 1rem;
-}
-
-/* Floating cards */
-.landing-float {
+.landing-hero__text {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  max-width: 460px;
-  margin: 0 auto;
+  max-width: 32ch;
+}
+
+.landing-hero__title {
+  font-size: clamp(2.6rem, 9vw, 4.5rem);
+}
+
+.landing-hero__accent {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.4rem, 4.5vw, 2rem);
+  color: var(--accent);
+}
+
+.landing-hero__subtitle {
+  font-size: 1.125rem;
+  color: var(--silver-dark);
+  max-width: 42ch;
+}
+
+.landing-hero__cta {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+
+@media (min-width: 640px) {
+  .landing-hero {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--space-8);
+  }
+}
+
+/* ---- Floating cards (live inside the hero's right column) ---- */
+.landing-float {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-self: start;
+  /* left offset so the diagonal reads on the right column */
+  padding-left: var(--space-4);
 }
 
 .landing-float__card {
-  animation: landing-bob 6s ease-in-out infinite;
-  will-change: transform;
+  position: relative;
+  /* peach halo, additive, never replaces --shadow-float */
+  box-shadow: var(--shadow-float), 0 30px 60px -20px rgba(224, 175, 160, 0.45);
 }
 
 .landing-float__card--need {
@@ -93,21 +135,11 @@
   border-left: 4px solid var(--danger);
 }
 
-@keyframes landing-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Shared section shell */
+/* ---- Shared section shell ---- */
 .landing-section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-6);
 }
 
 .landing-section__title {
@@ -118,7 +150,7 @@
 .landing-steps {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
 
 @media (min-width: 720px) {
@@ -130,7 +162,7 @@
 .landing-step {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .landing-step__icon {
@@ -145,7 +177,7 @@
   color: var(--silver-dark);
 }
 
-/* Call to action */
+/* ---- Call to action ---- */
 .landing-cta {
   align-items: center;
 }
@@ -155,7 +187,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-5);
   width: 100%;
 }
 
@@ -175,7 +207,7 @@
   color: var(--silver-dark);
 }
 
-/* Footer */
+/* ---- Footer ---- */
 .landing-footer {
   margin-top: auto;
   text-align: center;
@@ -185,4 +217,66 @@
 
 .landing-footer__note {
   margin-top: var(--space-1);
+}
+
+/* ================= Motion (only when motion is allowed) ================ */
+
+/* Scroll-reveal: start slightly lowered + translucent, float up on enter. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .landing-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Continuous slow bob + short staggered entrance, both per card.
+     First delay = bob phase, second delay = entrance stagger (<600ms). */
+  .landing-float__card {
+    animation:
+      landing-bob 6s ease-in-out infinite,
+      landing-appear 0.5s ease both;
+    will-change: transform;
+  }
+
+  .landing-float__card:nth-child(1) {
+    animation-delay: 0s, 0.05s;
+  }
+  .landing-float__card:nth-child(2) {
+    /* diagonal stagger: this card steps down the column */
+    margin-top: calc(-1 * var(--space-2));
+    animation-delay: 1.6s, 0.18s;
+  }
+  .landing-float__card:nth-child(3) {
+    margin-left: var(--space-5);
+    animation-delay: 3.2s, 0.31s;
+  }
+}
+
+@keyframes landing-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes landing-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
