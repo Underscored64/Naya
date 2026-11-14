@@ -18,6 +18,12 @@ export interface RedZone {
   worstBalance: number;
 }
 
+// A date interval passed to canAfford / whatIf / suggest.
+export interface Range {
+  from: string;
+  to: string;
+}
+
 // Add one calendar month to an ISO date string.
 function addMonth(iso: string): string {
   const [y, m, d] = iso.split("-").map((n) => parseInt(n, 10));
