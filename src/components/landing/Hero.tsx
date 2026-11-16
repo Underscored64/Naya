@@ -8,7 +8,7 @@ export default function Hero() {
         <h1 className="display landing-hero__title">Savoir avant lundi.</h1>
         <p className="landing-hero__accent">Décider en toute sérénité.</p>
         <p className="landing-hero__subtitle">
-          Votre argent, vos échéances et vos prochaines dépenses, enfin sous
+          Votre argent, vos échéances et vos prochaines dépenses enfin sous
           contrôle.
         </p>
         <Link to="/app" className="btn btn-primary landing-hero__cta">

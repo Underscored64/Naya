@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import "./landing.css";
+import ThemeToggle from "../ui/ThemeToggle";
 
 export default function Navbar() {
   return (
@@ -15,9 +16,12 @@ export default function Navbar() {
           />
           <span className="display landing-nav__word">Naya</span>
         </Link>
-        <Link to="/app" className="btn btn-primary landing-nav__cta">
-          Essayer la démo
-        </Link>
+        <div className="landing-nav__actions">
+          <ThemeToggle />
+          <Link to="/app" className="btn btn-primary landing-nav__cta">
+            Essayer la démo
+          </Link>
+        </div>
       </div>
     </nav>
   );

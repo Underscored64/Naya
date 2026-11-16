@@ -1,14 +1,21 @@
 :root {
-  /* Colors */
+  /* Colors (light) */
   --bg: #fafafa;
   --surface: #ffffff;
   --ink: #111214;
+  --ink-soft: #4a4d53;
   --silver: #c9ccd1;
   --silver-dark: #8b8f96;
-  --accent: #e0afa0;
-  --accent-soft: #f6e6e0;
+  --accent: #ff8fab;
+  --accent-soft: #ffe4ec; /* ~85% white blend, coherent with --accent */
   --danger: #c0392b;
   --ok: #2f7d5b;
+
+  /* Liquid glass: semi-transparent fill + hairline border (floating elements only) */
+  --glass-bg: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(17, 18, 20, 0.10);
+  --glass-blur: blur(18px) saturate(140%);
+  --glow-accent: rgba(255, 143, 171, 0.45); /* rose halo */
 
   /* Shape and elevation */
   --radius: 20px;
@@ -27,4 +34,40 @@
   /* Typography */
   --font-display: "TeX Gyre Heros", Helvetica, Arial, sans-serif;
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Dark theme: auto (system) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121214;
+    --surface: #1c1c1f;
+    --ink: #f2f2f3;
+    --ink-soft: #b6b8bd;
+    --silver: #2c2e33;
+    --silver-dark: #6e7076;
+    --accent: #ff8fab;
+    --accent-soft: #3a2530;
+    --danger: #e06a5b;
+    --ok: #58b48a;
+    --glass-bg: rgba(28, 28, 31, 0.66);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --shadow-float: 0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Dark theme: manual override (button toggles [data-theme] on <html>) */
+:root[data-theme="dark"] {
+  --bg: #121214;
+  --surface: #1c1c1f;
+  --ink: #f2f2f3;
+  --ink-soft: #b6b8bd;
+  --silver: #2c2e33;
+  --silver-dark: #6e7076;
+  --accent: #ff8fab;
+  --accent-soft: #3a2530;
+  --danger: #e06a5b;
+  --ok: #58b48a;
+  --glass-bg: rgba(28, 28, 31, 0.66);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --shadow-float: 0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
 }

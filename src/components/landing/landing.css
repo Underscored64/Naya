@@ -8,8 +8,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  gap: var(--space-7);
-  padding-bottom: var(--space-7);
+  gap: var(--space-8);
+  padding-bottom: var(--space-8);
 }
 
 /* ---- Sticky blurred pill navbar ---- */
@@ -29,13 +29,40 @@
   gap: var(--space-5);
   min-height: 44px;
   padding: var(--space-2) var(--space-4) var(--space-2) var(--space-5);
-  border: 1px solid var(--silver);
+  border: 1px solid var(--glass-border);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  /* silver hairline + soft two-layer shadow + peach halo, all additive */
-  box-shadow: var(--shadow-float), 0 18px 40px -22px rgba(224, 175, 160, 0.55);
+  /* liquid glass: translucent fill + blurred backdrop + rose halo */
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-float), 0 18px 40px -22px var(--glow-accent);
+}
+
+.landing-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Round outline toggle (sun/moon). 44px touch target. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: var(--glass-bg);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: color-mix(in srgb, var(--accent-soft) 60%, transparent);
+  border-color: var(--accent);
 }
 
 .landing-nav__brand {
@@ -79,15 +106,16 @@
 }
 
 .landing-hero__title {
-  font-size: clamp(2.6rem, 9vw, 4.5rem);
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
 }
 
 .landing-hero__accent {
   font-family: var(--font-display);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.15;
   letter-spacing: -0.01em;
-  font-size: clamp(1.4rem, 4.5vw, 2rem);
+  /* a line clearly smaller than the title, in --accent */
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
   color: var(--accent);
 }
 
@@ -109,20 +137,30 @@
   }
 }
 
-/* ---- Floating cards (live inside the hero's right column) ---- */
+/* ---- Floating cards: vertical auto-scroll carousel (one visible at a time) ---- */
+/* Fixed-height slot, right column. Cards stack absolutely and cross-fade. */
 .landing-float {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
+  position: relative;
   align-self: start;
-  /* left offset so the diagonal reads on the right column */
+  height: 160px;
   padding-left: var(--space-4);
 }
 
 .landing-float__card {
-  position: relative;
-  /* peach halo, additive, never replaces --shadow-float */
-  box-shadow: var(--shadow-float), 0 30px 60px -20px rgba(224, 175, 160, 0.45);
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  right: 0;
+  display: flex;
+  align-items: center;
+  min-height: 110px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  /* rose halo, additive, never replaces --shadow-float */
+  box-shadow: var(--shadow-float), 0 30px 60px -20px var(--glow-accent);
 }
 
 .landing-float__card--need {
@@ -133,6 +171,30 @@
 }
 .landing-float__card--warn {
   border-left: 4px solid var(--danger);
+}
+
+/* Active card is fully shown; others are pre-hidden and slide into place.
+   The transition itself is defined only under no-preference (see below), so
+   reduced motion leaves every card visible. */
+.landing-float__card:not(.is-active) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Reduced-motion fallback: render the three cards stacked, statically. */
+.landing-float--static {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  height: auto;
+}
+
+.landing-float--static .landing-float__card {
+  position: relative;
+  top: auto;
+  left: 0;
+  right: auto;
+  opacity: 1;
 }
 
 /* ---- Shared section shell ---- */
@@ -237,26 +299,22 @@
     transform: translateY(0);
   }
 
-  /* Continuous slow bob + short staggered entrance, both per card.
-     First delay = bob phase, second delay = entrance stagger (<600ms). */
+  /* Carousel cross-fade: inactive card sits slightly below, the active one
+     glides up into place (via the independent `translate` property so it does
+     not fight the continuous bob, which lives on `transform`). */
   .landing-float__card {
-    animation:
-      landing-bob 6s ease-in-out infinite,
-      landing-appear 0.5s ease both;
-    will-change: transform;
+    opacity: 0;
+    translate: 0 14px;
+    transition:
+      opacity 0.55s ease,
+      translate 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, translate;
   }
 
-  .landing-float__card:nth-child(1) {
-    animation-delay: 0s, 0.05s;
-  }
-  .landing-float__card:nth-child(2) {
-    /* diagonal stagger: this card steps down the column */
-    margin-top: calc(-1 * var(--space-2));
-    animation-delay: 1.6s, 0.18s;
-  }
-  .landing-float__card:nth-child(3) {
-    margin-left: var(--space-5);
-    animation-delay: 3.2s, 0.31s;
+  .landing-float__card.is-active {
+    opacity: 1;
+    translate: 0 0;
+    animation: landing-bob 6s ease-in-out infinite;
   }
 }
 
@@ -267,16 +325,5 @@
   }
   50% {
     transform: translateY(-9px);
-  }
-}
-
-@keyframes landing-appear {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
