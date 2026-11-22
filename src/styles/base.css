@@ -19,7 +19,11 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* Gradient background so the liquid glass is visible (docs/DESIGN.md §2). */
+  background:
+    radial-gradient(120% 80% at 80% -10%, var(--accent-soft), transparent 55%),
+    linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   line-height: 1.5;
@@ -91,6 +95,102 @@ a {
   background: var(--ink);
   border-color: var(--ink);
   color: #fff;
+}
+
+/* ---- Liquid glass — docs/DESIGN.md §2 ---- */
+
+/* Floating navbar / sticky headers. */
+.glass-nav {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-float), 0 2px 6px rgba(0, 0, 0, 0.04);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* Important card: month balance, key notification, modal. */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-float), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* Discreet list row: need, debt, secondary notification. 3-col grid. */
+.glass-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-row);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  backdrop-filter: var(--glass-blur-soft);
+}
+
+/* ---- Premium icon pill — docs/DESIGN.md §4 ---- */
+.icon-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--grey-light);
+  color: var(--grey);
+  transition: background 200ms ease, color 200ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Active / selected state. */
+.icon-pill--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Positive state ("ça va"). */
+.icon-pill--positive {
+  background: var(--accent-soft);
+  color: var(--accent-green);
+}
+
+/* ---- Motion — docs/DESIGN.md §5 ---- */
+
+/* Slow, continuous vertical float for the landing hero visual. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Short staggered entrance. Add .enter to cards; stagger via --enter-delay. */
+.enter {
+  animation: enter-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+@keyframes enter-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sr-only {

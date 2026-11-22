@@ -1,25 +1,36 @@
 :root {
-  /* Colors (light) */
-  --bg: #fafafa;
+  /* Colors (light) — docs/DESIGN.md §1, single source of truth */
+  --bg: #f7f6f4;
+  --bg-2: #efece8;
   --surface: #ffffff;
-  --ink: #111214;
-  --ink-soft: #4a4d53;
-  --silver: #c9ccd1;
-  --silver-dark: #8b8f96;
-  --accent: #ff8fab;
-  --accent-soft: #ffe4ec; /* ~85% white blend, coherent with --accent */
-  --danger: #c0392b;
-  --ok: #2f7d5b;
+  --ink: #1c1c1e;
+  --ink-soft: #6b6b70;
+  --grey: #9a9a9e;
+  --grey-light: #e4e3e1;
+  --accent-green: #3c6e71; /* "ça va", succès, montants positifs */
+  --accent: #e0afa0; /* rose pêche : action, marque */
+  --accent-soft: #f3dcd3;
+  --warn: #b4532a; /* "ça ne va pas", manque d'argent */
 
-  /* Liquid glass: semi-transparent fill + hairline border (floating elements only) */
-  --glass-bg: rgba(255, 255, 255, 0.68);
-  --glass-border: rgba(17, 18, 20, 0.10);
-  --glass-blur: blur(18px) saturate(140%);
-  --glow-accent: rgba(255, 143, 171, 0.45); /* rose halo */
+  /* Backwards-compatible aliases for legacy css (app.css, landing.css).
+     New code should reference --grey / --warn / --accent-green directly. */
+  --silver: var(--grey);
+  --silver-dark: var(--ink-soft);
+  --danger: var(--warn);
+  --ok: var(--accent-green);
+
+  /* Liquid glass — docs/DESIGN.md §2 */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: blur(20px) saturate(160%);
+  --glass-blur-soft: blur(10px);
+  --glow-accent: rgba(224, 175, 160, 0.45); /* peach halo */
 
   /* Shape and elevation */
   --radius: 20px;
-  --shadow-float: 0 12px 32px rgba(17, 18, 20, 0.1), 0 2px 6px rgba(17, 18, 20, 0.06);
+  --radius-card: 24px;
+  --radius-row: 16px;
+  --shadow-float: 0 12px 32px rgba(28, 28, 30, 0.1), 0 2px 6px rgba(28, 28, 30, 0.06);
 
   /* Spacing scale */
   --space-1: 4px;
@@ -39,35 +50,47 @@
 /* Dark theme: auto (system) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #121214;
-    --surface: #1c1c1f;
-    --ink: #f2f2f3;
-    --ink-soft: #b6b8bd;
-    --silver: #2c2e33;
-    --silver-dark: #6e7076;
-    --accent: #ff8fab;
-    --accent-soft: #3a2530;
-    --danger: #e06a5b;
-    --ok: #58b48a;
-    --glass-bg: rgba(28, 28, 31, 0.66);
-    --glass-border: rgba(255, 255, 255, 0.12);
+    --bg: #15171a;
+    --bg-2: #1b1e22;
+    --surface: #1f2226;
+    --ink: #f2f1ef;
+    --ink-soft: #a9acb1;
+    --grey: #7d8086;
+    --grey-light: #2a2d31;
+    --accent-green: #4d8a8d;
+    --accent: #e0afa0;
+    --accent-soft: rgba(224, 175, 160, 0.22);
+    --warn: #e08a5f;
+    --silver: var(--grey);
+    --silver-dark: var(--ink-soft);
+    --danger: var(--warn);
+    --ok: var(--accent-green);
+    --glass-bg: rgba(31, 34, 38, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glow-accent: rgba(224, 175, 160, 0.3);
     --shadow-float: 0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 }
 
 /* Dark theme: manual override (button toggles [data-theme] on <html>) */
 :root[data-theme="dark"] {
-  --bg: #121214;
-  --surface: #1c1c1f;
-  --ink: #f2f2f3;
-  --ink-soft: #b6b8bd;
-  --silver: #2c2e33;
-  --silver-dark: #6e7076;
-  --accent: #ff8fab;
-  --accent-soft: #3a2530;
-  --danger: #e06a5b;
-  --ok: #58b48a;
-  --glass-bg: rgba(28, 28, 31, 0.66);
-  --glass-border: rgba(255, 255, 255, 0.12);
+  --bg: #15171a;
+  --bg-2: #1b1e22;
+  --surface: #1f2226;
+  --ink: #f2f1ef;
+  --ink-soft: #a9acb1;
+  --grey: #7d8086;
+  --grey-light: #2a2d31;
+  --accent-green: #4d8a8d;
+  --accent: #e0afa0;
+  --accent-soft: rgba(224, 175, 160, 0.22);
+  --warn: #e08a5f;
+  --silver: var(--grey);
+  --silver-dark: var(--ink-soft);
+  --danger: var(--warn);
+  --ok: var(--accent-green);
+  --glass-bg: rgba(31, 34, 38, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glow-accent: rgba(224, 175, 160, 0.3);
   --shadow-float: 0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
 }
