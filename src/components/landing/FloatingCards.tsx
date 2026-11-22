@@ -1,77 +1,64 @@
-import { useEffect, useRef, useState } from "react";
-
-const CARDS = [
-  { text: "Lundi : il vous faut 45 000 F", tone: "need" },
-  { text: "Esi vous doit 12 000 F vendredi", tone: "debt" },
-  { text: "Puis-je acheter ce pagne ? Oui, mais attention le 25.", tone: "warn" },
-] as const;
-
-const INTERVAL = 2800; // ms between cards
+import { formatF } from "../../lib/format";
 
 /**
- * Hero cards shown as a vertical auto-scroll carousel: one card visible at a
- * time in a fixed-height slot, cross-fading with a slight vertical slide,
- * advancing on a timer and looping.
- *
- * Motion (the setInterval timer + the CSS fade/slide) is fully disabled under
- * prefers-reduced-motion: the hook bails out early and the stylesheet then
- * stacks all three cards statically.
+ * Hero floating visual: 2-3 glass cards stacked in depth on desktop (a
+ * notification card, a debts card, and a forecast card with a big number + a
+ * simple SVG sparkline). On mobile a single forecast card shows below the text.
+ * The front card carries the continuous `float` animation (disabled under
+ * prefers-reduced-motion via base.css). No chart library — the curve is a plain
+ * SVG polyline.
  */
 export default function FloatingCards() {
-  const [index, setIndex] = useState(0);
-  const prefersReduced = useRef(false);
-
-  useEffect(() => {
-    prefersReduced.current =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  }, []);
-
-  useEffect(() => {
-    // Static fallback: no timer, no auto-advance under reduced motion.
-    if (prefersReduced.current) return;
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % CARDS.length);
-    }, INTERVAL);
-    return () => clearInterval(id);
-  }, []);
-
-  // Reduced motion: render every card, stacked and static.
-  if (prefersReduced.current) {
-    return (
-      <div
-        className="landing-float landing-float--static"
-        aria-label="Exemples de ce que Naya prévoit"
-      >
-        {CARDS.map((c) => (
-          <article
-            key={c.text}
-            className={`card landing-float__card landing-float__card--${c.tone}`}
-          >
-            {c.text}
-          </article>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div
       className="landing-float"
-      aria-label="Exemples de ce que Naya prévoit"
-      aria-live="polite"
+      aria-label="Aperçu de ce que Naya prévoit"
     >
-      {CARDS.map((c, i) => (
-        <article
-          key={c.text}
-          aria-hidden={i !== index}
-          className={`card landing-float__card landing-float__card--${c.tone}${
-            i === index ? " is-active" : ""
-          }`}
+      {/* Back card: a day notification. */}
+      <article
+        className="glass-card landing-float__card landing-float__card--back"
+        aria-hidden
+      >
+        <p className="landing-float__label">Lundi</p>
+        <p className="landing-float__big">{formatF(45000)}</p>
+        <p className="landing-float__hint">il vous faut pour vos besoins</p>
+      </article>
+
+      {/* Middle card: a small debt. */}
+      <article
+        className="glass-card landing-float__card landing-float__card--mid"
+        aria-hidden
+      >
+        <p className="landing-float__label">Dette</p>
+        <p className="landing-float__big landing-float__big--ok">
+          {formatF(12000)}
+        </p>
+        <p className="landing-float__hint">Esi vous doit vendredi</p>
+      </article>
+
+      {/* Front card: forecast — the animated one, and the only one on mobile. */}
+      <article className="glass-card landing-float__card landing-float__card--front float">
+        <p className="landing-float__label">Solde prévu · lundi</p>
+        <p className="display landing-float__figure">{formatF(38000)}</p>
+        <svg
+          className="landing-float__curve"
+          viewBox="0 0 120 40"
+          preserveAspectRatio="none"
+          aria-hidden
         >
-          {c.text}
-        </article>
-      ))}
+          <polyline
+            points="2,30 22,24 42,26 62,14 82,18 102,8 118,12"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <p className="landing-float__hint landing-float__hint--warn">
+          Il vous manque {formatF(7000)}
+        </p>
+      </article>
     </div>
   );
 }

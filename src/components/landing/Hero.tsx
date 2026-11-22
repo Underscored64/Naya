@@ -5,8 +5,12 @@ export default function Hero() {
   return (
     <header className="landing-hero container">
       <div className="landing-hero__text">
-        <h1 className="display landing-hero__title">Savoir avant lundi.</h1>
-        <p className="landing-hero__accent">Décider en toute sérénité.</p>
+        <h1 className="landing-hero__title">
+          <span className="display landing-hero__title-bold">
+            Savoir avant lundi,
+          </span>{" "}
+          <span className="landing-hero__title-soft">en toute sérénité.</span>
+        </h1>
         <p className="landing-hero__subtitle">
           Votre argent, vos échéances et vos prochaines dépenses enfin sous
           contrôle.

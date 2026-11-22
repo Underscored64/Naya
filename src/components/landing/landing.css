@@ -106,17 +106,25 @@
 }
 
 .landing-hero__title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   font-size: clamp(2.4rem, 6vw, 3.8rem);
 }
 
-.landing-hero__accent {
+/* Two-tone hero title (docs/DESIGN.md §3): a bold display segment + a light
+   --ink-soft segment, so the eye lands on the promise, not the whole line. */
+.landing-hero__title-bold {
   font-family: var(--font-display);
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  /* a line clearly smaller than the title, in --accent */
-  font-size: clamp(1.1rem, 3vw, 1.6rem);
-  color: var(--accent);
+  color: var(--ink);
+}
+
+.landing-hero__title-soft {
+  font-weight: 300;
+  color: var(--ink-soft);
 }
 
 .landing-hero__subtitle {
@@ -137,23 +145,33 @@
   }
 }
 
-/* ---- Floating cards: vertical auto-scroll carousel (one visible at a time) ---- */
-/* Fixed-height slot, right column. Cards stack absolutely and cross-fade. */
+/* ---- Hero floating visual: glass cards stacked in depth (DESIGN §3/§4) ---- */
+/* Local radial behind the cards so the liquid glass reads on the gradient. */
 .landing-float {
   position: relative;
   align-self: start;
-  height: 160px;
-  padding-left: var(--space-4);
 }
 
+.landing-float::before {
+  content: "";
+  position: absolute;
+  inset: -12% -10% -6% -8%;
+  background: radial-gradient(
+    60% 55% at 60% 35%,
+    var(--accent-soft),
+    transparent 70%
+  );
+  filter: blur(20px);
+  z-index: -1;
+}
+
+/* Base card shape; each variant offsets its own position in depth. */
 .landing-float__card {
   position: absolute;
-  top: 0;
-  left: var(--space-4);
-  right: 0;
   display: flex;
-  align-items: center;
-  min-height: 110px;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   background: var(--glass-bg);
@@ -163,38 +181,94 @@
   box-shadow: var(--shadow-float), 0 30px 60px -20px var(--glow-accent);
 }
 
-.landing-float__card--need {
-  border-left: 4px solid var(--accent);
-}
-.landing-float__card--debt {
-  border-left: 4px solid var(--ok);
-}
-.landing-float__card--warn {
-  border-left: 4px solid var(--danger);
-}
-
-/* Active card is fully shown; others are pre-hidden and slide into place.
-   The transition itself is defined only under no-preference (see below), so
-   reduced motion leaves every card visible. */
-.landing-float__card:not(.is-active) {
-  opacity: 0;
-  pointer-events: none;
+/* Back card: a day notification, up and slightly back. */
+.landing-float__card--back {
+  top: -30px;
+  left: 28%;
+  transform: rotate(-5deg);
+  opacity: 0.92;
+  max-width: 230px;
 }
 
-/* Reduced-motion fallback: render the three cards stacked, statically. */
-.landing-float--static {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  height: auto;
+/* Middle card: a small debt, offset to the right. */
+.landing-float__card--mid {
+  bottom: 16px;
+  right: 2%;
+  transform: rotate(4deg);
+  opacity: 0.9;
+  max-width: 190px;
+  z-index: 1;
 }
 
-.landing-float--static .landing-float__card {
+/* Front card: the forecast — animated (float, guarded in base.css) and the
+   only card shown on mobile. */
+.landing-float__card--front {
   position: relative;
-  top: auto;
-  left: 0;
-  right: auto;
-  opacity: 1;
+  z-index: 2;
+  width: min(320px, 100%);
+}
+
+.landing-float__label {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+
+.landing-float__big {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin: 0;
+}
+
+.landing-float__big--ok {
+  color: var(--ok);
+}
+
+.landing-float__figure {
+  font-size: 2.4rem;
+  line-height: 1.05;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.landing-float__hint {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 4px 0 0;
+}
+
+.landing-float__hint--warn {
+  color: var(--danger);
+}
+
+.landing-float__curve {
+  width: 100%;
+  height: 40px;
+  color: var(--accent);
+  display: block;
+}
+
+/* ---- Responsive: one card, below the text, no stacking (DESIGN §6) ---- */
+@media (max-width: 640px) {
+  .landing-float {
+    margin-top: var(--space-5);
+  }
+
+  /* Secondary cards hidden so the visual stays readable on a narrow screen. */
+  .landing-float__card--back,
+  .landing-float__card--mid {
+    display: none;
+  }
+
+  .landing-float__card--front {
+    position: static;
+    transform: none;
+    width: 100%;
+  }
 }
 
 /* ---- Shared section shell ---- */
@@ -297,33 +371,5 @@
   .landing-reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
-  }
-
-  /* Carousel cross-fade: inactive card sits slightly below, the active one
-     glides up into place (via the independent `translate` property so it does
-     not fight the continuous bob, which lives on `transform`). */
-  .landing-float__card {
-    opacity: 0;
-    translate: 0 14px;
-    transition:
-      opacity 0.55s ease,
-      translate 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, translate;
-  }
-
-  .landing-float__card.is-active {
-    opacity: 1;
-    translate: 0 0;
-    animation: landing-bob 6s ease-in-out infinite;
-  }
-}
-
-@keyframes landing-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-9px);
   }
 }
