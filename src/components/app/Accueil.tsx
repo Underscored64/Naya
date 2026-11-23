@@ -1,44 +1,82 @@
-import { Wallet, CalendarClock, AlertTriangle } from "lucide-react";
-import { useAppState, sortByDate } from "../../data/state";
-import { forecast } from "../../engine/forecast";
-import { primaryAlert, nextDeadlineMessage, noDeadlineMessage } from "../../ai/fallback";
-import { today, monthRange } from "../../lib/dates";
-import { formatF } from "../../lib/format";
+import { AlertTriangle, Info, CheckCircle, Sparkles } from "lucide-react";
+import { useAppState } from "../../data/state";
+import { today } from "../../lib/dates";
+import { homeNotifications, type NotificationTone } from "../../ai/fallback";
+import MonthSummary from "./MonthSummary";
+
+// Icon + pill modifier per notification tone (docs/DESIGN.md §7).
+const TONE_ICON: Record<NotificationTone, typeof AlertTriangle> = {
+  warn: AlertTriangle,
+  info: Info,
+  good: CheckCircle,
+};
+const TONE_CLASS: Record<NotificationTone, string> = {
+  warn: "icon-pill--warn",
+  info: "icon-pill--info",
+  good: "icon-pill--positive",
+};
+
+// A freshly created account: no needs, no debts, no sales yet.
+function isNewAccount(needs: unknown[], debts: unknown[], sales: unknown[]): boolean {
+  return needs.length === 0 && debts.length === 0 && sales.length === 0;
+}
 
 export default function Accueil() {
   const { state } = useAppState();
-  const { profile, needs, debts } = state;
-
+  const { profile, needs, debts, sales } = state;
   const t = today();
-  const { end } = monthRange(t);
-  const days = forecast(profile, needs, debts, t, end);
-  const todayBalance = days.length > 0 ? days[0].balance : profile.openingBalance;
 
-  const nextNeed = sortByDate(needs.filter((n) => n.dueDate >= t))[0];
-  const alert = primaryAlert(state, t, end);
+  // Warm welcome when there is nothing to show yet — not an empty, scary list.
+  if (isNewAccount(needs, debts, sales)) {
+    return (
+      <section className="app-screen" aria-label="Accueil">
+        <div className="glass-card app-welcome enter" style={{ "--enter-delay": "0ms" } as React.CSSProperties}>
+          <span className={`icon-pill icon-pill--active app-welcome__icon`}>
+            <Sparkles size={20} aria-hidden />
+          </span>
+          <h2 className="app-welcome__title">Bienvenue sur Naya</h2>
+          <p className="app-welcome__text">
+            Ajoutez votre première vente ou un besoin du mois. Naya vous dira ensuite,
+            chaque jour, si vous avez assez pour vous en sortir.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  // 1 to 3 concrete notifications, generated from the real account state.
+  const notifications = homeNotifications(state, t, monthEnd(t));
 
   return (
     <section className="app-screen" aria-label="Accueil du jour">
-      <div className="card app-balance">
-        <span className="app-balance__label">
-          <Wallet size={16} aria-hidden /> Solde aujourd'hui
-        </span>
-        <span className="app-balance__value">{formatF(todayBalance)}</span>
+      {/* 1. Notifications first — the user reads her situation, not a chart. */}
+      <div className="app-notifications">
+        {notifications.map((n, i) => {
+          const Icon = TONE_ICON[n.tone];
+          return (
+            <div
+              key={n.id}
+              className="glass-card app-notification enter"
+              style={{ "--enter-delay": `${i * 40}ms` } as React.CSSProperties}
+            >
+              <span className={`icon-pill ${TONE_CLASS[n.tone]}`}>
+                <Icon size={20} aria-hidden />
+              </span>
+              <p className="app-notification__text">{n.text}</p>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="card app-deadline">
-        <span className="app-deadline__label">
-          <CalendarClock size={16} aria-hidden /> Prochaine échéance
-        </span>
-        <p>{nextNeed ? nextDeadlineMessage(nextNeed) : noDeadlineMessage()}</p>
-      </div>
-
-      <div className="card app-alert">
-        <span className="app-alert__label">
-          <AlertTriangle size={16} aria-hidden /> Naya vous dit
-        </span>
-        <p>{alert}</p>
-      </div>
+      {/* 2. Month summary card — it summarizes, it does not open the screen. */}
+      <MonthSummary profile={profile} needs={needs} debts={debts} />
     </section>
   );
+}
+
+// Last day of the month containing `date`, as "YYYY-MM-DD".
+function monthEnd(date: string): string {
+  const [y, m] = date.split("-").map((n) => parseInt(n, 10));
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return `${date.slice(0, 6)}-${String(lastDay).padStart(2, "0")}`;
 }

@@ -1,4 +1,5 @@
 import { Home, PenLine, LineChart, Users } from "lucide-react";
+import type { CSSProperties } from "react";
 
 export type TabId = "accueil" | "saisie" | "prevision" | "dettes";
 
@@ -22,20 +23,33 @@ export default function TabBar({
   active: TabId;
   onSelect: (id: TabId) => void;
 }) {
+  const index = Math.max(0, TABS.findIndex((tab) => tab.id === active));
+
   return (
     <nav className="app-tabbar" aria-label="Navigation de l'application">
-      {TABS.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          className={`app-tab${active === tab.id ? " app-tab--active" : ""}`}
-          aria-current={active === tab.id ? "page" : undefined}
-          onClick={() => onSelect(tab.id)}
-        >
-          <tab.Icon size={20} aria-hidden />
-          <span className="app-tab__label">{tab.label}</span>
-        </button>
-      ))}
+      {/* Sliding active background: moves via translateX instead of flashing. */}
+      <span
+        className="app-tabbar__indicator"
+        style={{ "--tab-count": TABS.length, "--tab-index": index } as CSSProperties}
+        aria-hidden
+      />
+      {TABS.map((tab) => {
+        const isActive = active === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            className={`app-tab${isActive ? " app-tab--active" : ""}`}
+            aria-current={isActive ? "page" : undefined}
+            onClick={() => onSelect(tab.id)}
+          >
+            <span className={`icon-pill${isActive ? " icon-pill--active" : ""}`}>
+              <tab.Icon size={20} aria-hidden />
+            </span>
+            <span className="app-tab__label">{tab.label}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 }

@@ -46,13 +46,17 @@ export default function NeedsList() {
       <h2 className="app-needs__title">Besoins du mois</h2>
 
       <ul className="app-needs__list">
-        {sorted.map((need) => (
-          <li key={need.id} className="app-need">
-            <div className="app-need__main">
-              <span className="app-need__label">{need.label}</span>
+        {sorted.map((need, i) => (
+          <li
+            key={need.id}
+            className="glass-row app-need enter"
+            style={{ "--enter-delay": `${i * 30}ms` } as React.CSSProperties}
+          >
+            <span className="app-need__label">{need.label}</span>
+            <span className="app-need__meta">
               <PriorityTag priority={need.priority} />
-              <span className="app-need__amount">{formatF(need.amount)}</span>
-            </div>
+            </span>
+            <span className="app-need__amount">{formatF(need.amount)}</span>
             <button
               type="button"
               className="app-iconbtn"

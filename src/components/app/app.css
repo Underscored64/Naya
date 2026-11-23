@@ -1,49 +1,18 @@
-/* App-shell layout for /app. Reuses tokens from tokens.css and utilities from
-   base.css. Floating UI: floating cards, soft shadows, 20px radius.
-   Built for 375px wide first; no horizontal scroll. */
+/* App screens — "notifications-first" home. Tokens from styles/tokens.css,
+   glass/motion classes from styles/base.css. docs/DESIGN.md §7, §2, §5, §4. */
 
-.app-shell {
+.app-layout {
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding-bottom: calc(44px + var(--space-5)); /* room for the floating tab bar */
 }
 
-/* Top bar: brand + settings */
-.app-topbar {
-  position: sticky;
-  top: var(--space-3);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--silver);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-float);
-  max-width: 520px;
-  width: calc(100% - var(--space-5));
-  margin: var(--space-4) auto 0;
-}
-
-.app-topbar__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.app-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  max-width: 520px;
+.app-main {
+  flex: 1;
+  max-width: 560px;
   width: 100%;
-  margin-top: var(--space-5);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) 112px;
 }
 
 .app-screen {
@@ -52,251 +21,369 @@
   gap: var(--space-4);
 }
 
-/* Generic small icon button (44px touch target) */
-.app-iconbtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
+/* ---- Tab bar with a sliding active background (docs/DESIGN.md §5) ---- */
+.app-tabbar {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   padding: var(--space-2);
-  border: none;
-  background: transparent;
-  color: var(--ink);
-  border-radius: 999px;
-}
-.app-iconbtn:hover {
-  background: var(--accent-soft);
+  z-index: 50;
 }
 
-/* Accueil cards */
-.app-balance__label,
-.app-deadline__label,
-.app-alert__label {
+.app-tabbar__indicator {
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  left: var(--space-2);
+  width: calc((100% - var(--space-2) * 2) / var(--tab-count));
+  border-radius: var(--radius-row);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-float);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  backdrop-filter: var(--glass-blur-soft);
+  /* Slide, never fade, between tabs. */
+  transform: translateX(calc(var(--tab-index) * 100%));
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 56px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 4px 0;
+}
+
+.app-tab--active {
+  color: var(--accent);
+}
+
+.app-tab__label {
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 500;
+}
+
+/* ---- Accueil: notifications first (docs/DESIGN.md §7) ---- */
+.app-notifications {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.app-notification {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-notification__text {
+  font-size: 1.02rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* Warm welcome for a brand-new, empty account. */
+.app-welcome {
+  display: grid;
+  gap: var(--space-3);
+  text-align: center;
+  justify-items: center;
+}
+
+.app-welcome__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+}
+
+.app-welcome__title {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.app-welcome__text {
+  color: var(--ink-soft);
+  max-width: 32ch;
+}
+
+/* ---- Month summary card: big balance + fine curve (docs/DESIGN.md §7) ---- */
+.app-summary {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.app-summary__label {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 0.85rem;
-  color: var(--silver-dark);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.app-balance__value {
-  display: block;
-  margin-top: var(--space-2);
-  font-size: 2rem;
+.app-summary__value {
+  font-size: 2.4rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
-.app-alert {
-  border-left: 4px solid var(--danger);
-}
-.app-alert p {
+/* Fine 30-day balance line, no axes. */
+.app-spark {
+  width: 100%;
+  height: 64px;
   margin-top: var(--space-2);
-  font-size: 1.05rem;
+  overflow: visible;
 }
 
-.app-deadline p {
-  margin-top: var(--space-2);
-  color: var(--ink);
+.app-spark__line {
+  stroke: var(--accent-green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
-/* Needs list */
+.app-spark__zero {
+  stroke: var(--grey-light);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---- Needs list as glass rows (docs/DESIGN.md §7) ---- */
+.app-needs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 .app-needs__title {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
+
 .app-needs__list {
   list-style: none;
-  margin: var(--space-4) 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
+/* Four columns: label / priority / amount / delete. */
 .app-need {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid var(--silver);
-  border-radius: 16px;
-  background: var(--bg);
-}
-.app-need__main {
-  flex: 1;
-  display: flex;
-  align-items: center;
+  grid-template-columns: 1fr auto auto auto;
   gap: var(--space-2);
-  flex-wrap: wrap;
 }
+
 .app-need__label {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+.app-need__meta {
+  display: inline-flex;
+  align-items: center;
+}
+
 .app-need__amount {
-  margin-left: auto;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-/* Priority chips */
-.app-need__prio,
-.app-prio-pick--on {
-  font-size: 0.75rem;
-  padding: 0 var(--space-2);
-  min-height: 28px;
-  border-radius: 999px;
+.app-iconbtn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink-soft);
+  transition: color 160ms ease, background 160ms ease, transform 160ms ease;
 }
-.app-need__prio--indispensable {
-  background: #fdecec;
-  color: var(--danger);
-}
-.app-need__prio--important {
+
+.app-iconbtn:hover {
+  color: var(--warn);
   background: var(--accent-soft);
-  color: #b06a5e;
-}
-.app-need__prio--confort {
-  background: #eaf3ee;
-  color: var(--ok);
+  transform: scale(1.05);
 }
 
-/* Quick-add form */
+.app-needs__empty {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  padding: var(--space-2) 0;
+}
+
+/* ---- Form (shared by NeedsList and the later Saisie tab) ---- */
 .app-need-form {
-  margin-top: var(--space-4);
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--space-3);
+  margin-top: var(--space-3);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--silver);
+  border-top: 1px solid var(--glass-border);
 }
-.app-input {
-  width: 100%;
-  min-height: 44px;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--silver);
-  border-radius: 14px;
-  background: var(--surface);
-  font: inherit;
-}
+
 .app-need-form__row {
-  display: flex;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
 }
-.app-need-form__row .app-input--amount {
-  flex: 1;
-}
-.app-need-form__row .app-input--date {
-  flex: 1;
-}
+
 .app-need-form__prios {
   display: flex;
   gap: var(--space-2);
+  flex-wrap: wrap;
 }
-.app-prio-pick {
-  flex: 1;
+
+.app-need-form__add {
+  width: 100%;
+}
+
+.app-input {
+  width: 100%;
   min-height: 44px;
   padding: 0 var(--space-3);
-  font-size: 0.9rem;
-  border-radius: 14px;
+  border: 1px solid var(--grey-light);
+  border-radius: var(--radius-row);
   background: var(--surface);
-  border: 1px solid var(--silver);
+  color: var(--ink);
+  font: inherit;
 }
+
+.app-input--amount {
+  max-width: 100%;
+}
+
+.app-prio-pick {
+  flex: 1 1 auto;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
 .app-prio-pick--on {
   background: var(--accent-soft);
   border-color: var(--accent);
+  color: var(--accent);
   font-weight: 600;
 }
-.app-need-form__add {
-  margin-top: var(--space-1);
-}
-.app-need-form__add:disabled {
-  opacity: 0.5;
+
+/* Priority chip coloured by level. */
+.app-need__prio {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--grey-light);
+  color: var(--ink-soft);
+  white-space: nowrap;
 }
 
-/* Placeholder */
-.app-placeholder__title {
-  font-size: 1.25rem;
-}
-.app-placeholder p {
-  margin-top: var(--space-2);
-  color: var(--silver-dark);
+.app-need__prio--indispensable {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
-/* Floating bottom tab bar */
-.app-tabbar {
-  position: fixed;
-  bottom: var(--space-4);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
+.app-need__prio--important {
+  background: var(--accent-soft);
+  color: var(--accent-green);
+}
+
+.app-need__prio--confort {
+  background: var(--grey-light);
+  color: var(--ink-soft);
+}
+
+/* ---- Placeholder (coming-soon screens) ---- */
+.app-placeholder {
   display: flex;
-  width: calc(100% - var(--space-5));
-  max-width: 460px;
-  padding: var(--space-2);
-  border: 1px solid var(--silver);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--shadow-float);
-}
-.app-tab {
-  flex: 1;
-  display: inline-flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-height: 44px;
-  padding: var(--space-1);
-  border: none;
-  background: transparent;
-  color: var(--silver-dark);
-  border-radius: 999px;
-}
-.app-tab__label {
-  font-size: 0.7rem;
-}
-.app-tab--active {
-  background: var(--ink);
-  color: #fff;
+  gap: var(--space-2);
+  color: var(--ink-soft);
 }
 
-/* Settings slide-up sheet */
-.app-sheet {
+.app-placeholder__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---- Settings sheet ---- */
+.app-settings-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: flex-end;
+  justify-content: center;
+  z-index: 60;
 }
-.app-sheet__backdrop {
-  position: absolute;
-  inset: 0;
-  border: none;
-  background: rgba(17, 18, 20, 0.4);
-  cursor: pointer;
-}
-.app-sheet__panel {
-  position: relative;
+
+.app-settings {
   width: 100%;
-  padding: var(--space-5);
+  max-width: 560px;
+  margin: 0 var(--space-4) var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--silver);
-  border-radius: 24px 24px 0 0;
-  box-shadow: var(--shadow-float);
 }
-.app-sheet__head {
+
+.app-settings__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--glass-border);
 }
-.app-sheet__head h2 {
+
+.app-settings__title {
   font-size: 1.2rem;
+  font-weight: 700;
 }
-.app-sheet__reset {
+
+.app-settings__field {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.app-settings__field input {
   width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--grey-light);
+  border-radius: var(--radius-row);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+/* Icon-pill tone variants for the notifications. */
+.icon-pill--warn {
+  background: var(--accent-soft);
+  color: var(--warn);
+}
+
+.icon-pill--info {
+  background: var(--accent-soft);
+  color: var(--accent-green);
 }
