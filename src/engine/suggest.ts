@@ -52,7 +52,6 @@ export function suggest(state: AppState, range: Range): Suggestion[] {
   if (zones.length === 0) return [];
 
   const firstRedDay = zones[0].from;
-  const firstRedEnd = zones[0].to;
 
   // Postponable needs: "confort" before "important", never "indispensable".
   const postponable = state.needs
