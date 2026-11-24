@@ -5,7 +5,7 @@
 // Each action is tested on its own by rerunning `forecast`; `resolvesShortfall`
 // is true only when that single action removes the first red zone.
 
-import type { AppState } from "../data/types";
+import type { AppState, Need } from "../data/types";
 import { forecast, redZones, type Range } from "./forecast";
 
 export type SuggestionKind = "postpone" | "remind";
@@ -23,12 +23,18 @@ const priorityRank: Record<string, number> = {
   indispensable: 2,
 };
 
-// Whether postponing one need (to the day after the first red zone) clears it.
-function postponingClears(state: AppState, needId: string, redEnd: string, range: Range): boolean {
-  const deferredDue = addDaysSafe(redEnd, 1);
-  const needs = state.needs.map((n) => (n.id === needId ? { ...n, dueDate: deferredDue } : n));
+// Whether postponing one need by 7 days clears the first red zone.
+function postponingClears(state: AppState, need: Need, range: Range): boolean {
+  const needs = state.needs.map((n) => (n.id === need.id ? { ...n, dueDate: postponeDueDate(need) } : n));
   const days = forecast(state.profile, needs, state.debts, range.from, range.to);
   return redZones(days).length === 0;
+}
+
+// New due date when "Reporter" is pressed: push the need back by one week.
+// Shared by the UI and by `postponingClears` so the promise and the live effect
+// always agree.
+export function postponeDueDate(need: Need): string {
+  return addDaysSafe(need.dueDate, 7);
 }
 
 // A tiny local add-days to avoid pulling the dates lib into this module's surface.
@@ -60,7 +66,7 @@ export function suggest(state: AppState, range: Range): Suggestion[] {
     kind: "postpone",
     targetId: n.id,
     label: `Reporter le ${n.label.toLowerCase()}`,
-    resolvesShortfall: postponingClears(state, n.id, firstRedEnd, range),
+    resolvesShortfall: postponingClears(state, n, range),
   }));
 
   // Reminders: clients whose unpaid debt is promised before the first red day,

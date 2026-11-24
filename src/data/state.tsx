@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { loadState, resetDemo, saveState } from "./store";
+import { addDays } from "../lib/dates";
 import type { AppState, Need, Priority } from "./types";
 
 // A freshly created need without an id (the provider assigns one).
@@ -14,6 +15,7 @@ interface AppContextValue {
   state: AppState;
   addNeed: (need: NewNeed) => void;
   deleteNeed: (id: string) => void;
+  postponeNeed: (id: string, days: number) => void;
   reset: () => void;
 }
 
@@ -52,10 +54,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const deleteNeed: AppContextValue["deleteNeed"] = (id) =>
     setState((s) => ({ ...s, needs: s.needs.filter((n) => n.id !== id) }));
 
+  // "Reporter": push one need back by `days` so the forecast re-renders live.
+  const postponeNeed: AppContextValue["postponeNeed"] = (id, days) =>
+    setState((s) => ({
+      ...s,
+      needs: s.needs.map((n) =>
+        n.id === id ? { ...n, dueDate: addDays(n.dueDate, days) } : n,
+      ),
+    }));
+
   const reset: AppContextValue["reset"] = () => setState(resetDemo());
 
   return (
-    <Ctx.Provider value={{ state, addNeed, deleteNeed, reset }}>
+    <Ctx.Provider value={{ state, addNeed, deleteNeed, postponeNeed, reset }}>
       {children}
     </Ctx.Provider>
   );

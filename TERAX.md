@@ -1,48 +1,50 @@
-# TERAX.md — Contexte du projet (à lire en premier, à chaque session)
+# TERAX.md — Contexte du projet Naya (à lire en premier, à chaque session)
 
 ## What we are building
-**Naya**: a French-language web app for small female merchants in Lomé. It tracks sales and customer debts, knows the month's needs, forecasts day by day, and answers "Can I afford this this month?".
-Principle: **AI proposes, rules decide, the user validates.** All numbers come from code (`src/engine/`). The LLM never computes or invents an amount. The app must work with the LLM off.
-Deadline: Sat Nov 14, 2026. Dev 10:00-12:30 and 13:00-14:45. Submission (working deployed URL) at 15:30. Prefer simple and working over clever.
+**Naya** : appli web pour petites commerçantes de Lomé. Elle suit ventes, dépenses, dettes clients et remboursements, et répond à « Puis-je me permettre ça ce mois-ci ? ».
+**Règle d'or** : le code calcule tous les montants. L'IA comprend une saisie en langage naturel et explique des résultats — elle n'invente jamais un chiffre et n'écrit jamais en base elle-même. L'utilisatrice confirme toujours avant qu'une opération soit enregistrée.
+**Principe d'accueil** : l'écran d'accueil montre d'abord 1 à 3 phrases concrètes (notifications), pas un tableau de bord à interpréter. Les chiffres et graphiques viennent ensuite, en résumé.
+Présentation devant jury : **5 décembre 2026**. Reconstruction en cours depuis le 22 novembre, vous seul.
 
-## Stack (do not change without asking)
-- Vite + React 18 + TypeScript **strict**. Plain CSS with variables (`src/styles/tokens.css`). No Tailwind, no UI kit.
-- State: React state + `localStorage` (try/catch around every access). No database, no auth.
-- Tests: `vitest` (engine only).
-- Deploy: Vercel. Serverless functions in `api/` (OpenAI-compatible HTTP call via `fetch`, no SDK).
-- Icons: `lucide-react` (only extra dependency allowed besides react-router-dom and vitest).
-- UI text in **French** (vouvoiement, warm and simple). Code, identifiers and comments in **English**.
+## Ce qui a changé par rapport à l'ancienne version
+- Ancien stockage `localStorage` + comptes locaux → remplacé par **Supabase** (Postgres + Auth + Row Level Security). Vrais comptes, vraies données isolées par utilisatrice.
+- Palette : **plus de rose**. Blanc (dominant), gris/argent (secondaire), **vert `#3c6e71` en accent unique**, utilisé avec parcimonie (boutons principaux, états actifs, succès).
+- Animations : bibliothèque **`motion`** (ex-Framer Motion) pour de vrais effets d'interface, pas du CSS seul.
+- Un seul espace financier pour cette version (pas de séparation pro/personnel pour le 5 décembre — voir `docs/ARCHITECTURE.md` pour le périmètre exact retenu).
 
-## Hard rules
-1. Money = integer FCFA. Never floats. Format: `45 000 F` via `formatF()` in `src/lib/format.ts`.
-2. Dates = `YYYY-MM-DD` strings. Never rely on the machine's timezone for logic.
-3. `src/engine/` = pure functions, zero imports from React, the DOM or `ai/`. Every function has a vitest test.
-4. LLM calls only from `api/*.ts` (Web-standard handlers, no `@vercel/node`, see task 11). No key in the browser. Output = JSON validated by hand (no Zod): invalid -> fallback.
-5. Every AI feature has a non-AI fallback in `src/ai/fallback.ts`. Text from the AI may only contain numbers present in the input (check in code).
-6. Demo data is fictional (merchant "Ama"). Dates are generated relative to today. Never real data.
-7. Do not add libraries, rename folders or change the stack on your own. If unclear, stop and ask.
-8. Fonts: `TeX Gyre Heros Bold` for big titles (class `.display`), self-hosted **OTF** `public/fonts/texgyreheros-bold.otf`, declared in `src/styles/base.css`. Body uses the system font. Fallback `Helvetica, Arial, sans-serif`.
-9. Style "Floating UI": floating cards, soft two-layer shadows, 20px radius, silver hairline border, blurred pill navbar. Palette in `tokens.css` (accent `#e0afa0`).
-10. Respect `prefers-reduced-motion`. Touch targets >= 44px. No horizontal scroll on mobile.
+## Stack (ne pas changer sans demander)
+- Vite + React 18 + TypeScript **strict**.
+- **Supabase** : Postgres, Auth (email + mot de passe), Row Level Security sur toutes les tables (`auth.uid() = user_id`).
+- **TanStack Query** pour les données Supabase (pas Redux Toolkit).
+- **`motion`** pour les animations d'interface ; CSS classique (variables, voir `docs/DESIGN.md`) pour la mise en page et le « liquid glass ».
+- Tests : `vitest`, sur le moteur de calcul (`src/engine/`) uniquement.
+- IA : fonctions serverless Vercel (`api/parse.ts`, `api/explain.ts`), jamais de clé IA côté navigateur.
+- Icônes : `lucide-react`, toujours posées dans une pastille (`.icon-pill`, voir `docs/DESIGN.md`).
+- UI en français (vouvoiement, chaleureux, sans jargon). Code et commentaires en anglais.
 
-## How to work
-- **One task at a time** from `docs/tasks/NN-*.md`. Read only that file + this one (+ `docs/CAHIER_DES_CHARGES.md` section named in the task, never the whole file).
-- Short plan first, then implement, then run the checks of the task.
-- Done = the "Done when" list passes. Then `git add -A && git commit -m "task NN: ..."` and `git push` (Vercel redeploys).
-- Do not start the next task before the commit.
-- Keep files small (< 150 lines). Prefer many small modules.
+## Règles dures
+1. Montants en FCFA = **entiers**, jamais de flottant (le FCFA n'a pas de sous-unité).
+2. `src/engine/` = fonctions pures, aucune dépendance React/Supabase/IA, une fonction = un test vitest.
+3. Aucune écriture en base n'est déclenchée par l'IA directement : elle renvoie une proposition, l'utilisatrice confirme, **puis** le front écrit dans Supabase (RLS fait barrière).
+4. Aucune suppression physique de `sales`/`expenses`/`repayments` : correction = nouvelle ligne + `deleted_at` sur l'ancienne + entrée dans `audit_log` (voir `docs/ARCHITECTURE_DONNEES.md`).
+5. Toute fonctionnalité IA a un repli sans IA (`src/ai/fallback.ts`). L'appli fonctionne IA coupée.
+6. Pas de clé Supabase « service role » ni de clé IA dans le code front ou dans un fichier commité — uniquement en variables d'environnement Vercel.
+7. Respecter `prefers-reduced-motion` : toute animation `motion` doit être désactivable (utiliser son hook dédié).
+8. Fichiers courts (< 150 lignes). Une tâche à la fois, depuis `docs/tasks/NN-*.md`.
 
-## Status
-Scaffold done (tasks 00-01 provided). Brand ready: `public/brand/logo-mark.png` (symbol, use it) and `public/brand/brand-sheet-reference.png` (reference sheet only, never render it in the UI). Start from the first unchecked task in `README.md` (currently task 02, rewritten for a two-column hero + peach glow + scroll reveal). Tokens and utility classes (`.card`, `.btn`, `.btn-primary`, `.pill`, `.container`, `.display`) already exist: reuse them, do not recreate.
+## Comment travailler
+- Lire ce fichier + la tâche du jour (+ la section citée de `docs/CAHIER_DES_CHARGES.md` ou `docs/ARCHITECTURE_DONNEES.md` si la tâche le demande). Jamais tout un document en entier.
+- Plan court → implémentation → vérifications listées dans la tâche → `git add -A && git commit -m "task NN: ..."` → `git push` (Vercel redéploie sur l'URL existante).
+- Ne jamais toucher à `vercel.json`, aux réglages du projet Vercel, ou à un remote Git sans qu'une tâche le demande explicitement (voir tâche 00).
 
-## Commands
-`npm run dev` · `npm run build` (must pass) · `npm test` · `npx vercel` / push to Git for deploy
+## État (à tenir à jour)
+Phase 0 (audit) en cours. Voir `docs/PLAN.md` pour l'ordre des tâches.
 
-## Layout
+## Arborescence cible
 ```
-src/{main,App}.tsx                    src/pages/{Landing,AppShell}.tsx
-src/components/{landing/}            src/styles/{tokens,base}.css
-src/engine/{forecast,canAfford,whatIf,suggest}.ts     src/data/{types,demo,store}.ts
-src/ai/{client,fallback}.ts          src/lib/{format,dates,whatsapp}.ts
-api/{parse,explain}.ts               tests/engine/      public/fonts/
+src/{main,App}.tsx                 src/pages/{Landing,Login,Signup,AppShell}.tsx
+src/components/{landing/,app/,ui/} src/styles/{tokens,base}.css
+src/engine/{balance,debt,forecast}.ts                 src/data/{types,queries}.ts  (Supabase via TanStack Query)
+src/ai/{client,fallback}.ts        src/lib/{format,dates}.ts
+api/{parse,explain}.ts             supabase/schema.sql   tests/engine/
 ```
