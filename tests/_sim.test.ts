@@ -9,7 +9,8 @@ describe("current demo trace", () => {
   it("full", () => {
     const t = "2026-11-01";
     const s = makeDemo(t);
-    const range: Range = monthRange(t); // what MonthSummary uses
+    const mr = monthRange(t); // what MonthSummary uses
+    const range: Range = { from: mr.start, to: mr.end };
     console.log("RANGE", range.from, "->", range.to);
     console.log("profile", JSON.stringify(s.profile));
     console.log("needs", s.needs.map((n) => `${n.id}:${n.label}:${n.amount}:${n.dueDate}:${n.priority}:${n.recurring ?? "-"}`).join(" | "));
