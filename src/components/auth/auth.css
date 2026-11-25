@@ -1,0 +1,130 @@
+/* Auth pages (login / signup). Centered glass card. Tokens from
+   styles/tokens.css; the green accent (#3c6e71) is the single accent used for
+   the primary action and the brand mark. docs/DESIGN.md §1, §2, §7. */
+
+.auth {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5) var(--space-4);
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth__brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  align-self: center;
+}
+
+.auth__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--accent-green);
+  color: #fff;
+}
+
+.auth__title {
+  font-size: 1.6rem;
+}
+
+.auth__text {
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---- Form ---- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.auth-field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.auth-field__label {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.auth-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--grey-light);
+  border-radius: var(--radius-row);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Primary action: the green accent, used with parcimonie. */
+.auth-submit {
+  margin-top: var(--space-2);
+  background: var(--accent-green);
+  border-color: var(--accent-green);
+  color: #fff;
+  font-weight: 600;
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inline error / notice. */
+.auth-msg {
+  font-size: 0.9rem;
+  line-height: 1.35;
+  padding: var(--space-3);
+  border-radius: var(--radius-row);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.auth-msg--error {
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn);
+}
+
+/* ---- Footer: link to the other auth page + back to landing ---- */
+.auth-alt {
+  text-align: center;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.auth-alt a {
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+.auth-back {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}

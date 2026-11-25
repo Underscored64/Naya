@@ -387,3 +387,82 @@
   background: var(--accent-soft);
   color: var(--accent-green);
 }
+
+/* ---- Settings sheet ---- */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: end center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, #000 40%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.sheet-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  animation: sheet-up 240ms ease;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sheet__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet__row-title {
+  font-weight: 600;
+}
+
+.settings-action {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--grey-light);
+  border-radius: var(--radius-row);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.settings-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.settings-action--danger {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+}
+
+.settings-action--danger:hover {
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}

@@ -1,6 +1,9 @@
-import { X, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
 
-// A small slide-up sheet with the "Réinitialiser la démo" action.
+// Settings panel: sign out + reset the demo (tâche 01 demo data only, until the
+// real data layer lands).
 export default function SettingsSheet({
   open,
   onClose,
@@ -10,33 +13,64 @@ export default function SettingsSheet({
   onClose: () => void;
   onReset: () => void;
 }) {
-  if (!open) return null;
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
 
-  const onConfirm = () => {
-    onReset();
-    onClose();
+  const signOut = async () => {
+    setBusy(true);
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      setBusy(false);
+      onClose();
+      navigate("/login", { replace: true });
+    }
   };
 
   return (
-    <div className="app-sheet" role="dialog" aria-modal="true" aria-label="Réglages">
-      <button
-        type="button"
-        className="app-sheet__backdrop"
-        aria-label="Fermer"
-        onClick={onClose}
-      />
-      <div className="app-sheet__panel">
-        <div className="app-sheet__head">
-          <h2>Réglages</h2>
-          <button type="button" className="app-iconbtn" aria-label="Fermer" onClick={onClose}>
-            <X size={20} aria-hidden />
+    <div
+      className={`sheet-overlay${open ? " is-open" : ""}`}
+      onClick={onClose}
+      aria-hidden={!open}
+    >
+      <section
+        className="glass-card sheet"
+        role="dialog"
+        aria-label="Réglages"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sheet__row">
+          <span className="sheet__row-title">Réglages</span>
+          <button
+            type="button"
+            className="app-iconbtn"
+            onClick={onClose}
+            aria-label="Fermer les réglages"
+          >
+            ✕
           </button>
         </div>
-        <p>Recommencer avec la démo d'Ama efface vos données locales.</p>
-        <button type="button" className="btn btn-primary app-sheet__reset" onClick={onConfirm}>
-          <RotateCcw size={18} aria-hidden /> Réinitialiser la démo
+
+        <button
+          type="button"
+          className="settings-action settings-action--danger"
+          onClick={signOut}
+          disabled={busy}
+        >
+          {busy ? "Déconnexion…" : "Se déconnecter"}
         </button>
-      </div>
+
+        <button
+          type="button"
+          className="settings-action"
+          onClick={() => {
+            onReset();
+            onClose();
+          }}
+        >
+          Réinitialiser la démo
+        </button>
+      </section>
     </div>
   );
 }
