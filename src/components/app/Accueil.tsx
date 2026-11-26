@@ -16,18 +16,18 @@ const TONE_CLASS: Record<NotificationTone, string> = {
   good: "icon-pill--positive",
 };
 
-// A freshly created account: no needs, no debts, no sales yet.
-function isNewAccount(needs: unknown[], debts: unknown[], sales: unknown[]): boolean {
-  return needs.length === 0 && debts.length === 0 && sales.length === 0;
+// A freshly created account: no sales, no debts, no planned entries yet.
+function isNewAccount(state: ReturnType<typeof useAppState>["state"]): boolean {
+  const { sales, clients, inflows, outflows } = state;
+  return sales.length === 0 && clients.length === 0 && inflows.length === 0 && outflows.length === 0;
 }
 
 export default function Accueil() {
   const { state } = useAppState();
-  const { profile, needs, debts, sales } = state;
   const t = today();
 
   // Warm welcome when there is nothing to show yet — not an empty, scary list.
-  if (isNewAccount(needs, debts, sales)) {
+  if (isNewAccount(state)) {
     return (
       <section className="app-screen" aria-label="Accueil">
         <div className="glass-card app-welcome enter" style={{ "--enter-delay": "0ms" } as React.CSSProperties}>
@@ -69,7 +69,7 @@ export default function Accueil() {
       </div>
 
       {/* 2. Month summary card — it summarizes, it does not open the screen. */}
-      <MonthSummary profile={profile} needs={needs} debts={debts} />
+      <MonthSummary state={state} />
     </section>
   );
 }

@@ -1,107 +1,62 @@
 import { describe, it, expect } from "vitest";
-import {
-  shortfallMessage,
-  okMessage,
-  nextDeadlineMessage,
-  noDeadlineMessage,
-  primaryAlert,
-  homeNotifications,
-} from "../../src/ai/fallback";
-import { today, addDays } from "../../src/lib/dates";
+import { homeNotifications } from "../../src/ai/fallback";
+import { addDays } from "../../src/lib/dates";
 import type { AppState } from "../../src/data/types";
 
-// A green state: enough cash and sales, a small need -> no red zone.
-function greenState(): AppState {
-  const from = today();
-  return {
-    profile: { openingBalance: 100000, avgDailySales: 10000 },
-    needs: [{ id: "n", label: "Petit besoin", amount: 5000, dueDate: addDays(from, 5), priority: "confort" }],
-    debts: [],
-    sales: [],
-  };
-}
-
-// A red state: no cash, no sales, a big need -> a red zone.
-function redState(): AppState {
-  const from = today();
-  return {
-    profile: { openingBalance: 0, avgDailySales: 0 },
-    needs: [{ id: "n", label: "Loyer", amount: 50000, dueDate: addDays(from, 3), priority: "indispensable" }],
-    debts: [],
-    sales: [],
-  };
-}
-
-describe("ai/fallback (standard messages)", () => {
-  it("shortfallMessage echoes the given amount and date, nothing invented", () => {
-    const msg = shortfallMessage("2026-11-05", 45000);
-    expect(msg).toContain("manquera");
-    expect(msg).toContain("45");
-    expect(msg).toContain("000");
+describe("homeNotifications", () => {
+  it("returns 1 to 3 notifications", () => {
+    const from = "2026-01-01";
+    const state = {
+      initialBalance: 100000,
+      clients: [],
+      sales: [],
+      expenses: [],
+      repayments: [],
+      outflows: [{ id: "n", amount: 5000, date: addDays(from, 5), label: "Petit besoin" }],
+      inflows: [],
+    };
+    const out = homeNotifications(state, from, addDays(from, 7));
+    expect(out.length).toBeGreaterThanOrEqual(1);
+    expect(out.length).toBeLessThanOrEqual(3);
   });
 
-  it("primaryAlert flags the first red zone when one exists", () => {
-    const from = today();
-    const msg = primaryAlert(redState(), from, addDays(from, 35));
-    expect(msg).toContain("manquera");
-    expect(msg).toContain("50");
-    expect(msg).toContain("000");
+  it("flags a red zone with a warm tone when a big outflow is coming", () => {
+    const from = "2026-01-01";
+    const state: AppState = {
+      initialBalance: 0,
+      clients: [],
+      sales: [],
+      expenses: [],
+      repayments: [],
+      outflows: [{ id: "rent", amount: 10000, date: addDays(from, 2), label: "Loyer" }],
+      inflows: [],
+    };
+    const out = homeNotifications(state, from, addDays(from, 7));
+    expect(out.some((n) => n.tone === "warn")).toBe(true);
   });
 
-  it("primaryAlert says OK when there is no red zone", () => {
-    const from = today();
-    expect(primaryAlert(greenState(), from, addDays(from, 35))).toBe(okMessage());
-  });
-
-  it("nextDeadlineMessage echoes only the need's amount and date", () => {
-    const msg = nextDeadlineMessage({
-      id: "x",
-      label: "Scolarité",
-      amount: 25000,
-      dueDate: "2026-11-05",
-      priority: "indispensable",
-    });
-    expect(msg).toContain("Scolarité");
-    expect(msg).toContain("25");
-    expect(msg).toContain("000");
-  });
-
-  it("noDeadlineMessage is a calm fallback", () => {
-    expect(noDeadlineMessage()).toContain("Aucune échéance");
-  });
-});
-
-describe("homeNotifications (notifications-first home)", () => {
-  it("is reassuring when nothing is urgent", () => {
-    const from = today();
-    const notes = homeNotifications(greenState(), from, addDays(from, 35));
-    expect(notes).toHaveLength(1);
-    expect(notes[0].tone).toBe("good");
-    expect(notes[0].text).toBe(okMessage());
-  });
-
-  it("leads with a red-zone warning and caps at three", () => {
-    const from = today();
-    const s: AppState = {
-      ...redState(),
-      debts: [
-        { id: "d1", client: "Esi", amount: 12000, promisedDate: addDays(from, -3), paid: false },
-        { id: "d2", client: "Komi", amount: 8000, promisedDate: addDays(from, -2), paid: false },
+  it("reports a client's outstanding debt", () => {
+    const from = "2026-01-01";
+    const state: AppState = {
+      initialBalance: 100000,
+      clients: [{ id: "awa", name: "Awa" }],
+      sales: [
+        {
+          id: "s",
+          clientId: "awa",
+          amountTotal: 50000,
+          amountPaid: 30000,
+          paymentMethod: "especes",
+          source: "manuel",
+        },
       ],
+      expenses: [],
+      repayments: [],
+      outflows: [],
+      inflows: [],
     };
-    const notes = homeNotifications(s, from, addDays(from, 35));
-    expect(notes.length).toBeLessThanOrEqual(3);
-    expect(notes[0].tone).toBe("warn");
-    expect(notes.some((n) => n.tone === "info" && n.text.includes("Esi"))).toBe(true);
-  });
-
-  it("never reports a paid debt as overdue", () => {
-    const from = today();
-    const s: AppState = {
-      ...greenState(),
-      debts: [{ id: "d1", client: "Esi", amount: 12000, promisedDate: addDays(from, -3), paid: true }],
-    };
-    const notes = homeNotifications(s, from, addDays(from, 35));
-    expect(notes.some((n) => n.text.includes("Esi"))).toBe(false);
+    const out = homeNotifications(state, from, addDays(from, 7));
+    // The debt notification names the amount in "FCFA" via formatF ("10 000 F").
+    expect(out.some((n) => n.tone === "info" && n.text.includes("F"))).toBe(true);
   });
 });

@@ -1,86 +1,81 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { loadState, resetDemo, saveState } from "./store";
-import { addDays } from "../lib/dates";
-import type { AppState, Need, Priority } from "./types";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import type { AppState, PlannedOutflow } from "./types";
+import { loadState, saveState, resetState } from "./store";
 
-// A freshly created need without an id (the provider assigns one).
-export interface NewNeed {
+// A new planned outflow (a "besoin" of the month) entered from the UI.
+export interface NewOutflow {
   label: string;
   amount: number;
-  dueDate: string;
-  priority: Priority;
+  date: string; // "YYYY-MM-DD"
+  recurring?: "weekly" | "monthly";
 }
 
-interface AppContextValue {
+export interface AppStateContextValue {
   state: AppState;
-  addNeed: (need: NewNeed) => void;
-  deleteNeed: (id: string) => void;
-  postponeNeed: (id: string, days: number) => void;
+  // Add a planned outflow ("besoin") to the forecast.
+  addOutflow: (outflow: NewOutflow) => void;
+  // Remove a planned outflow by id.
+  removeOutflow: (id: string) => void;
+  // Wipe to the demo data.
   reset: () => void;
 }
 
-const Ctx = createContext<AppContextValue | null>(null);
-
-// Monotonic id so two needs added in the same tick never collide.
-let seq = 0;
-function newId(): string {
-  seq += 1;
-  return `need-${Date.now()}-${seq}`;
+// Sort items that carry a date ascending.
+export function sortByDate<T extends { date: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => a.date.localeCompare(b.date));
 }
 
-export function AppStateProvider({ children }: { children: React.ReactNode }) {
+const AppStateContext = createContext<AppStateContextValue | null>(null);
+
+// One-letter id for a new row.
+function newId(): string {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(() => loadState());
 
-  // Persist on every change. We skip the very first write (the value that was
-  // just loaded) so we do not round-trip the demo into storage needlessly.
-  const first = useRef(true);
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
     saveState(state);
   }, [state]);
 
-  const addNeed: AppContextValue["addNeed"] = (need) =>
-    setState((s) => ({
-      ...s,
-      needs: [
-        ...s.needs,
-        { ...need, id: newId(), amount: Math.round(need.amount) },
+  const addOutflow = useCallback((outflow: NewOutflow) => {
+    setState((prev) => ({
+      ...prev,
+      outflows: [
+        ...prev.outflows,
+        {
+          id: newId(),
+          amount: outflow.amount,
+          date: outflow.date,
+          label: outflow.label,
+          recurring: outflow.recurring,
+        },
       ],
     }));
+  }, []);
 
-  const deleteNeed: AppContextValue["deleteNeed"] = (id) =>
-    setState((s) => ({ ...s, needs: s.needs.filter((n) => n.id !== id) }));
-
-  // "Reporter": push one need back by `days` so the forecast re-renders live.
-  const postponeNeed: AppContextValue["postponeNeed"] = (id, days) =>
-    setState((s) => ({
-      ...s,
-      needs: s.needs.map((n) =>
-        n.id === id ? { ...n, dueDate: addDays(n.dueDate, days) } : n,
-      ),
+  const removeOutflow = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      outflows: prev.outflows.filter((o: PlannedOutflow) => o.id !== id),
     }));
+  }, []);
 
-  const reset: AppContextValue["reset"] = () => setState(resetDemo());
+  const reset = useCallback(() => setState(resetState()), []);
 
-  return (
-    <Ctx.Provider value={{ state, addNeed, deleteNeed, postponeNeed, reset }}>
-      {children}
-    </Ctx.Provider>
+  const value = useMemo(
+    () => ({ state, addOutflow, removeOutflow, reset }),
+    [state, addOutflow, removeOutflow, reset],
   );
+
+  return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }
 
-export function useAppState(): AppContextValue {
-  const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useAppState must be used inside AppStateProvider");
+// Consumer hook; throws when used outside the provider.
+export function useAppState(): AppStateContextValue {
+  const ctx = useContext(AppStateContext);
+  if (!ctx) throw new Error("useAppState must be used within <AppStateProvider>");
   return ctx;
 }
-
-// Small shared helpers so the screens do not re-import engine pieces.
-export function sortByDate<T extends { dueDate: string }>(items: T[]): T[] {
-  return [...items].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-}
-
-export type { AppState, Need };

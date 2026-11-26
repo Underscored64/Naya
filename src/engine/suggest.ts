@@ -1,85 +1,140 @@
-// Pure "what should I do?" advisor. Given the current state it returns an ordered
-// list of concrete actions to clear the first red zone:
-//   - postpone "confort" needs first, then "important" (never "indispensable");
-//   - remind clients whose debt is promised before the first red day.
-// Each action is tested on its own by rerunning `forecast`; `resolvesShortfall`
-// is true only when that single action removes the first red zone.
+// Suggestions to clear a red zone. Pure. Each candidate action (postpone an
+// outflow, advance a planned inflow) is tested on its own by rerunning `forecast`;
+// an action keeps it only when it removes the red zone. Numbers come only from
+// the engine.
 
-import type { AppState, Need } from "../data/types";
 import { forecast, redZones, type Range } from "./forecast";
+import type {
+  AccountData,
+  PlannedInflow,
+  PlannedOutflow,
+} from "../data/types";
+import { addDays } from "../lib/dates";
 
-export type SuggestionKind = "postpone" | "remind";
+export type SuggestionKind = "postponeOutflow" | "advanceInflow";
 
 export interface Suggestion {
   kind: SuggestionKind;
-  targetId: string; // need id (postpone) or debt id (remind)
-  label: string; // human French label, e.g. "Reporter le Pagne"
-  resolvesShortfall: boolean;
+  // id of the planned item moved.
+  targetId: string;
+  // Human sentence shown on the card.
+  text: string;
+  // Number of days the item is moved (negative = earlier, positive = later).
+  shiftDays: number;
+  // The new zone-free worst balance after the action, or null when none.
+  resultingWorst: number | null;
 }
 
-const priorityRank: Record<string, number> = {
-  confort: 0,
-  important: 1,
-  indispensable: 2,
-};
-
-// Whether postponing one need by 7 days clears the first red zone.
-function postponingClears(state: AppState, need: Need, range: Range): boolean {
-  const needs = state.needs.map((n) => (n.id === need.id ? { ...n, dueDate: postponeDueDate(need) } : n));
-  const days = forecast(state.profile, needs, state.debts, range.from, range.to);
+// Does postponing the outflow by 7 days clear every red zone?
+function postponingClears(
+  account: AccountData,
+  inflows: PlannedInflow[],
+  outflows: PlannedOutflow[],
+  outflow: PlannedOutflow,
+  range: Range,
+): boolean {
+  const shifted = outflows.map((o) =>
+    o.id === outflow.id ? { ...o, date: addDays(o.date, 7) } : o,
+  );
+  const days = forecast(account, inflows, shifted, range.from, range.to);
   return redZones(days).length === 0;
 }
 
-// New due date when "Reporter" is pressed: push the need back by one week.
-// Shared by the UI and by `postponingClears` so the promise and the live effect
-// always agree.
-export function postponeDueDate(need: Need): string {
-  return addDaysSafe(need.dueDate, 7);
+// Does advancing the inflow to the zone's start clear every red zone?
+function advancingClears(
+  account: AccountData,
+  inflows: PlannedInflow[],
+  outflows: PlannedOutflow[],
+  inflow: PlannedInflow,
+  zoneStart: string,
+  range: Range,
+): boolean {
+  const shifted = inflows.map((i) =>
+    i.id === inflow.id ? { ...i, date: zoneStart } : i,
+  );
+  const days = forecast(account, shifted, outflows, range.from, range.to);
+  return redZones(days).length === 0;
 }
 
-// A tiny local add-days to avoid pulling the dates lib into this module's surface.
-function addDaysSafe(iso: string, days: number): string {
-  const [y, m, d] = iso.split("-").map((n) => parseInt(n, 10));
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  const p = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-  return `${dt.getUTCFullYear()}-${p(dt.getUTCMonth() + 1)}-${p(dt.getUTCDate())}`;
+// Worst balance across the window, or null when the balance never goes negative.
+function worstOrNone(
+  account: AccountData,
+  inflows: PlannedInflow[],
+  outflows: PlannedOutflow[],
+  range: Range,
+): number | null {
+  const zones = redZones(forecast(account, inflows, outflows, range.from, range.to));
+  if (zones.length === 0) return null;
+  return Math.min(...zones.map((z) => z.worstBalance));
 }
 
-export function suggest(state: AppState, range: Range): Suggestion[] {
-  const baseline = forecast(state.profile, state.needs, state.debts, range.from, range.to);
+// Build the list of candidate suggestions that each clear a red zone on their own.
+export function suggest(
+  account: AccountData,
+  inflows: PlannedInflow[],
+  outflows: PlannedOutflow[],
+  range: Range,
+): Suggestion[] {
+  const baseline = forecast(account, inflows, outflows, range.from, range.to);
   const zones = redZones(baseline);
   if (zones.length === 0) return [];
 
-  const firstRedDay = zones[0].from;
+  const out: Suggestion[] = [];
 
-  // Postponable needs: "confort" before "important", never "indispensable".
-  const postponable = state.needs
-    .filter((n) => n.priority === "confort" || n.priority === "important")
-    .sort((a, b) =>
-      priorityRank[a.priority] - priorityRank[b.priority] ||
-      a.dueDate.localeCompare(b.dueDate),
-    );
+  // 1. Postponing a recurring/declared outflow by a week.
+  for (const zone of zones) {
+    const candidate = outflows
+      .filter((o) => o.date <= zone.to)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+    if (candidate && postponingClears(account, inflows, outflows, candidate, range)) {
+      out.push({
+        kind: "postponeOutflow",
+        targetId: candidate.id,
+        text: `Reporter ${candidate.label ?? "ce besoin"} de 7 jours.`,
+        shiftDays: 7,
+        resultingWorst: worstOrNone(
+          account,
+          inflows,
+          outflows.map((o) => (o.id === candidate.id ? { ...o, date: addDays(o.date, 7) } : o)),
+          range,
+        ),
+      });
+      break; // one postponing suggestion is enough.
+    }
+  }
 
-  const out: Suggestion[] = postponable.map((n) => ({
-    kind: "postpone",
-    targetId: n.id,
-    label: `Reporter le ${n.label.toLowerCase()}`,
-    resolvesShortfall: postponingClears(state, n, range),
-  }));
+  // 2. Advancing a planned inflow (a client repayment) to the zone start.
+  for (const zone of zones) {
+    const candidate = inflows
+      .filter((i) => i.date > zone.from)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+    if (candidate && advancingClears(account, inflows, outflows, candidate, zone.from, range)) {
+      out.push({
+        kind: "advanceInflow",
+        targetId: candidate.id,
+        text: `Décaler l'entrée ${candidate.label ?? "prévue"} au ${zone.from}.`,
+        shiftDays: -(Math.max(1, daysBetween(zone.from, candidate.date))),
+        resultingWorst: worstOrNone(
+          account,
+          inflows.map((i) => (i.id === candidate.id ? { ...i, date: zone.from } : i)),
+          outflows,
+          range,
+        ),
+      });
+      break; // one advancing suggestion is enough.
+    }
+  }
 
-  // Reminders: clients whose unpaid debt is promised before the first red day,
-  // soonest first. A reminder alone cannot clear the zone (the inflow is already
-  // counted), so resolvesShortfall stays false.
-  const reminders = state.debts
-    .filter((d) => !d.paid && d.promisedDate < firstRedDay)
-    .sort((a, b) => a.promisedDate.localeCompare(b.promisedDate))
-    .map((d) => ({
-      kind: "remind" as const,
-      targetId: d.id,
-      label: `Relancer ${d.client}`,
-      resolvesShortfall: false,
-    }));
+  return out;
+}
 
-  return [...out, ...reminders];
+// Whole days between two "YYYY-MM-DD" strings, b minus a (always non-negative
+// here by construction of the candidates).
+function daysBetween(a: string, b: string): number {
+  return Math.round((toUtc(b) - toUtc(a)) / 86_400_000);
+}
+
+function toUtc(iso: string): number {
+  const [y, m, d] = iso.split("-").map((n) => parseInt(n, 10));
+  return Date.UTC(y, m - 1, d);
 }

@@ -1,38 +1,59 @@
-import { today } from "../lib/dates";
 import { makeDemo } from "./demo";
 import type { AppState } from "./types";
 
-const KEY = "naya.state.v1";
+// Local persistence for the in-memory account, keyed by user id so multiple
+// browsers/devices stay isolated. Until the Supabase client wires up the live
+// data (later tasks) this is the source of truth on refresh. The shape matches
+// the Supabase rows (see src/data/types.ts).
+const KEY = "naya:account:v4";
 
-// Load the saved state, or fall back to the demo (Ama) when nothing is saved or
-// the stored JSON is unreadable/corrupt. Every localStorage access is guarded.
+// Load the account, falling back to the demo when nothing is stored or the
+// stored payload is from an older version.
 export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return makeDemo(today());
-    const parsed = JSON.parse(raw) as AppState;
-    if (!parsed.profile || !Array.isArray(parsed.needs) || !Array.isArray(parsed.debts)) {
-      return makeDemo(today());
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AppState>;
+      // Basic shape check: a valid state always carries these arrays.
+      if (
+        typeof parsed.initialBalance === "number" &&
+        Array.isArray(parsed.clients) &&
+        Array.isArray(parsed.sales) &&
+        Array.isArray(parsed.expenses) &&
+        Array.isArray(parsed.repayments)
+      ) {
+        return {
+          initialBalance: parsed.initialBalance,
+          clients: parsed.clients ?? [],
+          sales: parsed.sales ?? [],
+          expenses: parsed.expenses ?? [],
+          repayments: parsed.repayments ?? [],
+          inflows: parsed.inflows ?? [],
+          outflows: parsed.outflows ?? [],
+        };
+      }
     }
-    return { ...parsed, sales: Array.isArray(parsed.sales) ? parsed.sales : [] };
   } catch {
-    return makeDemo(today());
+    // fall through to demo
   }
+  return makeDemo();
 }
 
-// Persist the state. Failures (e.g. storage disabled) are swallowed so the app
-// never crashes; the in-memory state keeps working for the session.
 export function saveState(state: AppState): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
-    // ignore
+    // ignore quota / private-mode errors
   }
 }
 
-// Reset to a fresh demo state (dates relative to today) and persist it.
-export function resetDemo(): AppState {
-  const state = makeDemo(today());
-  saveState(state);
-  return state;
+// Drop everything and fall back to the demo again (the "réinitialiser la démo"
+// button).
+export function resetState(): AppState {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // ignore
+  }
+  return makeDemo();
 }

@@ -1,98 +1,57 @@
-// Standard (non-AI) messages for Naya. The app must work with the LLM off, so
-// every screen has a deterministic French message it can show on its own.
-// Numbers always come from the engine or from the user's input — these
-// templates only pick the wording, never invent an amount.
-
+// AI fallback — runs when there is no LLM key. It produces the same outputs the
+// AI would: a list of 1–3 "home" notifications and an "explanation" string. The
+// money numbers all come from the engine (pure, testable), so the app works
+// fully without the AI. See docs/ARCHITECTURE_DONNEES.md §4.
 import { forecast, redZones } from "../engine/forecast";
-import type { AppState, Need } from "../data/types";
-import { formatDate, formatF } from "../lib/format";
-import { daysBetween } from "../lib/dates";
+import { computeClientDebt } from "../engine/debt";
+import { formatF, formatShortDate } from "../lib/format";
+import type { AppState } from "../data/types";
 
-// "Il vous manquera 45 000 F le lundi 5 mars."
-export function shortfallMessage(date: string, amount: number): string {
-  return `Il vous manquera ${formatF(amount)} le ${formatDate(date)}.`;
-}
-
-// No red zone in the horizon.
-export function okMessage(): string {
-  return "Vous avez de la marge ce mois-ci, tout est sous contrôle.";
-}
-
-// One-line reminder for a coming need.
-export function nextDeadlineMessage(need: Need): string {
-  return `Prochaine échéance : ${need.label}, ${formatF(need.amount)} le ${formatDate(need.dueDate)}.`;
-}
-
-// No need is due on or after `from`.
-export function noDeadlineMessage(): string {
-  return "Aucune échéance prévue. Vous pouvez souffler un instant.";
-}
-
-// The single main alert for the Accueil screen. Numbers come from the engine;
-// only the wording is the fallback's. No LLM involved.
-export function primaryAlert(state: AppState, from: string, to: string): string {
-  const zones = redZones(forecast(state.profile, state.needs, state.debts, from, to));
-  if (zones.length === 0) return okMessage();
-  const first = zones[0];
-  return shortfallMessage(first.from, -first.worstBalance);
-}
-
-// ---- Accueil notifications (docs/DESIGN.md §7) ----
-// 1 to 3 concrete, sentence-form notifications generated from the real account
-// state. Every number comes from the engine or the data; these templates only
-// pick the wording. No LLM, no invented amount.
 export type NotificationTone = "warn" | "info" | "good";
 
 export interface HomeNotification {
   id: string;
   tone: NotificationTone;
-  text: string;
+  text: string; // one or two short sentences, in French, no jargon
 }
 
-// Human "9 days" with correct French singular/plural.
-function sinceDays(days: number): string {
-  return days <= 1 ? "1 jour" : `${days} jours`;
+// "You can make it" — no red zone in the window.
+function explainNoZone(): string {
+  return "Bonne nouvelle : votre solde reste positif tout le mois. Vous pouvez tenir.";
 }
 
-// Build the 1-3 home notifications. Warnings (coming red zone) first, then
-// overdue client debts, then a single "all is fine" message when there is
-// nothing to act on.
-export function homeNotifications(
-  state: AppState,
-  todayStr: string,
-  end: string,
-): HomeNotification[] {
+// "You'll be short" — at least one red zone, with the day it starts.
+function explainRedZone(redDays: string): string {
+  return `Attention : le ${formatShortDate(redDays)}, votre solde pourrait passer en rouge. Réglez un besoin plus tôt ou rappelez un client avant cette date.`;
+}
+
+// Upcoming debts: the largest amount the user still owes, if any.
+function largestDebt(state: AppState): number {
+  let max = 0;
+  for (const client of state.clients) {
+    const owed = computeClientDebt(client.id, state.sales, state.repayments);
+    if (owed > max) max = owed;
+  }
+  return max;
+}
+
+// 1 to 3 warm, concrete notifications about the next few days, derived from the
+// real account. No chart, no jargon — the user reads her situation first.
+export function homeNotifications(state: AppState, todayStr: string, end: string): HomeNotification[] {
   const out: HomeNotification[] = [];
-  const zones = redZones(forecast(state.profile, state.needs, state.debts, todayStr, end));
 
-  if (zones.length > 0) {
+  const zones = redZones(forecast(state, state.inflows, state.outflows, todayStr, end));
+  if (zones.length === 0) {
+    out.push({ id: "ok", tone: "good", text: explainNoZone() });
+  } else {
     const first = zones[0];
-    out.push({
-      id: "zone",
-      tone: "warn",
-      text: shortfallMessage(first.from, -first.worstBalance),
-    });
+    out.push({ id: "short", tone: "warn", text: explainRedZone(first.from) });
   }
 
-  // Overdue unpaid debts, soonest first, capped so we never exceed 3 total.
-  const overdue = state.debts
-    .filter((d) => !d.paid && d.promisedDate < todayStr)
-    .sort((a, b) => a.promisedDate.localeCompare(b.promisedDate))
-    .slice(0, 3 - out.length);
-
-  for (const debt of overdue) {
-    out.push({
-      id: `debt-${debt.id}`,
-      tone: "info",
-      text: `${debt.client} vous doit ${formatF(debt.amount)} depuis ${sinceDays(
-        Math.max(0, daysBetween(debt.promisedDate, todayStr)),
-      )}.`,
-    });
-  }
-
-  // Nothing to act on: one reassuring message.
-  if (out.length === 0) {
-    out.push({ id: "ok", tone: "good", text: okMessage() });
+  // Largest outstanding debt, if any client still owes.
+  const debt = largestDebt(state);
+  if (debt > 0) {
+    out.push({ id: "debt", tone: "info", text: `Un client vous doit ${formatF(debt)}. Envoyez un rappel avant la fin du mois.` });
   }
 
   return out.slice(0, 3);

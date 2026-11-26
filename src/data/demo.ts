@@ -1,43 +1,85 @@
-import { addDays } from "../lib/dates";
-import type { AppState, Debt, Need, Profile, Sale } from "./types";
+import type {
+  AccountData,
+  AppState,
+  Client,
+  Expense,
+  PlannedInflow,
+  PlannedOutflow,
+  Repayment,
+  Sale,
+} from "./types";
 
-// Build a fictional month for the merchant "Ama", relative to `todayStr`.
-// Numbers are tuned so that, without any action, the running balance dips
-// negative around day 12 (first red zone). See docs/tasks/03-data.md.
+// Fixed reference date for the demo so the forecast / suggestion tests are
+// reproducible (the real UI uses the live "today"). The demo tells the "you can
+// make it" story: a brief red zone on 12-10/12-11 that Esi's repayment on 12-12
+// clears.
+const T = "2026-12-01";
+const d = (n: number) => `${T.slice(0, 8)}${String(n).padStart(2, "0")}`;
 
-let counter = 0;
-function id(prefix: string): string {
-  counter += 1;
-  return `${prefix}-${counter}`;
+const clients: Client[] = [
+  { id: "awa", name: "Awa", phone: "+228 90 00 00 01" },
+  { id: "esi", name: "Esi", phone: "+228 91 11 11 12" },
+];
+
+const sales: Sale[] = [
+  // Awa buys 50,000, pays 30,000 now, owes 20,000.
+  {
+    id: "s-awa",
+    clientId: "awa",
+    amountTotal: 50000,
+    amountPaid: 30000,
+    paymentMethod: "especes",
+    source: "manuel",
+  },
+  // Esi buys 40,000 on credit, pays nothing now, owes 40,000.
+  {
+    id: "s-esi",
+    clientId: "esi",
+    amountTotal: 40000,
+    amountPaid: 0,
+    paymentMethod: "mobile_money",
+    source: "ia",
+  },
+];
+
+const expenses: Expense[] = [
+  { id: "e-transport", amount: 3000, category: "transport", paymentMethod: "especes", source: "manuel" },
+];
+
+const repayments: Repayment[] = [
+  { id: "r-awa", clientId: "awa", amount: 10000 },
+];
+
+// Forward-looking entries that drive the forecast over the demo window.
+const inflows: PlannedInflow[] = [
+  { id: "in-awa", amount: 10000, date: d(18), label: "Awa" },
+  { id: "in-esi", amount: 40000, date: d(12), label: "Esi" },
+];
+
+const outflows: PlannedOutflow[] = [
+  { id: "out-stock", amount: 80000, date: d(10), label: "Réapprovisionnement" },
+  { id: "out-loyer", amount: 30000, date: d(15), label: "Loyer" },
+];
+
+export function makeDemo(_today = T): AppState {
+  return {
+    initialBalance: 70000,
+    clients,
+    sales,
+    expenses,
+    repayments,
+    inflows,
+    outflows,
+  };
 }
 
-export function makeDemo(todayStr: string): AppState {
-  counter = 0;
-  const d = (n: number) => addDays(todayStr, n);
-
-  const profile: Profile = {
-    openingBalance: 38000,
-    avgDailySales: 4000,
+// Account-only view (no planned entries), matching a Supabase row snapshot.
+export function makeDemoAccount(_today = T): AccountData {
+  return {
+    initialBalance: 70000,
+    clients,
+    sales,
+    expenses,
+    repayments,
   };
-
-  // Weekly restock at day 12 and 26 (indispensable).
-  // Tuition day 5, tontine day 14, a pagne day 24 (confort).
-  const needs: Need[] = [
-    { id: id("need"), label: "Réapprovisionnement", amount: 45000, dueDate: d(12), priority: "indispensable", recurring: "weekly" },
-    { id: id("need"), label: "Réapprovisionnement", amount: 45000, dueDate: d(26), priority: "indispensable", recurring: "weekly" },
-    { id: id("need"), label: "Scolarité", amount: 25000, dueDate: d(5), priority: "indispensable" },
-    { id: id("need"), label: "Tontine", amount: 10000, dueDate: d(14), priority: "important", recurring: "monthly" },
-    { id: id("need"), label: "Pagne", amount: 15000, dueDate: d(24), priority: "confort" },
-  ];
-
-  // Debts at their promised dates: Esi +3, Kofi +5, Akouvi +9.
-  const debts: Debt[] = [
-    { id: id("debt"), client: "Esi", amount: 12000, promisedDate: d(3), paid: false },
-    { id: id("debt"), client: "Kofi", amount: 3000, promisedDate: d(5), paid: false },
-    { id: id("debt"), client: "Akouvi", amount: 8000, promisedDate: d(9), paid: false },
-  ];
-
-  const sales: Sale[] = [];
-
-  return { profile, needs, debts, sales };
 }

@@ -1,58 +1,57 @@
-import { describe, expect, it } from "vitest";
+import { describe, it, expect } from "vitest";
 import { makeDemo } from "../../src/data/demo";
-import { addDays, daysBetween } from "../../src/lib/dates";
+import { computeBalance } from "../../src/engine/balance";
+import { computeClientDebt } from "../../src/engine/debt";
+import type { AppState } from "../../src/data/types";
 
-// Demo for "Ama". Money is integer FCFA; the first restock lands ~day 12 so that,
-// with no action, the balance dips negative there (a red zone for the forecast).
-describe("demo data", () => {
-  const t = "2026-11-01";
-  const state = makeDemo(t);
+// The demo is the "you can make it" story: a brief red zone on 12-10/12-11 that
+// Esi's repayment on 12-12 clears.
+describe("makeDemo", () => {
+  it("returns a fully populated account", () => {
+    const state = makeDemo();
+    expect(state.initialBalance).toBe(70000);
+    expect(state.clients.map((c) => c.name).sort()).toEqual(["Awa", "Esi"]);
+    expect(state.sales.length).toBeGreaterThan(0);
+    expect(state.inflows.length).toBeGreaterThan(0);
+    expect(state.outflows.length).toBeGreaterThan(0);
+  });
 
-  it("keeps money as integers and dates as ISO strings", () => {
-    expect(state.profile.openingBalance).toBe(38000);
-    expect(state.profile.avgDailySales).toBe(4000);
-    for (const n of state.needs) {
-      expect(Number.isInteger(n.amount)).toBe(true);
-      expect(n.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  it("keeps every amount an integer and every date a valid ISO string", () => {
+    const state = makeDemo();
+    for (const s of state.sales) {
+      expect(Number.isInteger(s.amountTotal)).toBe(true);
+      expect(Number.isInteger(s.amountPaid)).toBe(true);
+      expect(s.amountPaid).toBeLessThanOrEqual(s.amountTotal);
     }
-    for (const d of state.debts) {
-      expect(Number.isInteger(d.amount)).toBe(true);
-      expect(d.promisedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    for (const e of state.expenses) {
+      expect(Number.isInteger(e.amount)).toBe(true);
+    }
+    for (const r of state.repayments) {
+      expect(Number.isInteger(r.amount)).toBe(true);
+    }
+    for (const f of [...state.inflows, ...state.outflows]) {
+      expect(f.date).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
     }
   });
 
-  it("has the expected needs and debts", () => {
-    const byLabel = state.needs.find((n) => n.label === "Scolarité");
-    expect(byLabel?.amount).toBe(25000);
-    expect(byLabel?.priority).toBe("indispensable");
-    const tontine = state.needs.find((n) => n.label === "Tontine");
-    expect(tontine?.amount).toBe(10000);
-    expect(tontine?.priority).toBe("important");
-    const pagne = state.needs.find((n) => n.label === "Pagne");
-    expect(pagne?.amount).toBe(15000);
-    expect(pagne?.priority).toBe("confort");
-    const restocks = state.needs.filter((n) => n.label === "Réapprovisionnement");
-    expect(restocks).toHaveLength(2);
-    expect(restocks.every((n) => n.amount === 45000)).toBe(true);
-    expect(restocks.every((n) => n.recurring === "weekly")).toBe(true);
-
-    const esi = state.debts.find((d) => d.client === "Esi");
-    expect(esi?.amount).toBe(12000);
-    expect(daysBetween(t, esi!.promisedDate)).toBe(3);
-    const kofi = state.debts.find((d) => d.client === "Kofi");
-    expect(kofi?.amount).toBe(3000);
-    expect(daysBetween(t, kofi!.promisedDate)).toBe(5);
-    const akouvi = state.debts.find((d) => d.client === "Akouvi");
-    expect(akouvi?.amount).toBe(8000);
-    expect(daysBetween(t, akouvi!.promisedDate)).toBe(9);
+  it("computes the per-client debt", () => {
+    const state = makeDemo();
+    const awa = state.clients.find((c) => c.name === "Awa")!;
+    const esi = state.clients.find((c) => c.name === "Esi")!;
+    expect(computeClientDebt(awa.id, state.sales, state.repayments)).toBe(10000); // 50,000 − 30,000 paid − 10,000 repaid
+    expect(computeClientDebt(esi.id, state.sales, state.repayments)).toBe(40000); // 40,000 on credit, nothing repaid
   });
 
-  it("generates dates relative to the given day", () => {
-    const a = makeDemo("2026-11-01");
-    const b = makeDemo("2027-01-04");
-    expect(daysBetween(a.needs[0].dueDate, b.needs[0].dueDate)).toBe(
-      daysBetween("2026-11-01", "2027-01-04"),
-    );
-    expect(daysBetween("2027-01-04", addDays("2027-01-04", 12))).toBe(12);
+  it("computes a single current balance across all rows (§3)", () => {
+    const state: AppState = makeDemo();
+    // §3: initial 70,000 + paid (30,000) + repayments (10,000) − expenses (3,000)
+    expect(
+      computeBalance(
+        state.initialBalance,
+        state.sales,
+        state.expenses,
+        state.repayments,
+      ),
+    ).toBe(107000);
   });
 });

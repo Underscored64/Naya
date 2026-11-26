@@ -1,42 +1,37 @@
 import { useState } from "react";
 import { Trash2, Plus } from "lucide-react";
-import { useAppState, sortByDate, type NewNeed } from "../../data/state";
-import type { Priority } from "../../data/types";
+import { useAppState, sortByDate, type NewOutflow } from "../../data/state";
+import type { Recurrence } from "../../data/types";
 import { today } from "../../lib/dates";
 import { formatF } from "../../lib/format";
 
-const PRIORITIES: { id: Priority; label: string }[] = [
-  { id: "indispensable", label: "Indispensable" },
-  { id: "important", label: "Important" },
-  { id: "confort", label: "Confort" },
+const RECUR: { id: Recurrence | undefined; label: string }[] = [
+  { id: undefined, label: "Une fois" },
+  { id: "weekly", label: "Chaque semaine" },
+  { id: "monthly", label: "Chaque mois" },
 ];
 
-// Priority chip shown on each need, coloured by its level.
-function PriorityTag({ priority }: { priority: Priority }) {
-  const label = PRIORITIES.find((p) => p.id === priority)?.label ?? priority;
-  return <span className={`app-need__prio app-need__prio--${priority}`}>{label}</span>;
-}
-
+// The list of planned outflows ("besoins du mois"), each with add / delete.
 export default function NeedsList() {
-  const { state, addNeed, deleteNeed } = useAppState();
+  const { state, addOutflow, removeOutflow } = useAppState();
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState(today());
-  const [priority, setPriority] = useState<Priority>("important");
+  const [date, setDate] = useState(today());
+  const [recurring, setRecurring] = useState<Recurrence | undefined>(undefined);
 
-  const sorted = sortByDate(state.needs);
+  const sorted = sortByDate(state.outflows);
 
-  const canAdd = label.trim() !== "" && Number(amount) > 0 && dueDate !== "";
+  const canAdd = label.trim() !== "" && Number(amount) > 0 && date !== "";
 
   const submit = () => {
     if (!canAdd) return;
-    const need: NewNeed = {
+    const outflow: NewOutflow = {
       label: label.trim(),
-      amount: Number(amount),
-      dueDate,
-      priority,
+      amount: Math.round(Number(amount)),
+      date,
+      recurring,
     };
-    addNeed(need);
+    addOutflow(outflow);
     setLabel("");
     setAmount("");
   };
@@ -52,16 +47,17 @@ export default function NeedsList() {
             className="glass-row app-need enter"
             style={{ "--enter-delay": `${i * 30}ms` } as React.CSSProperties}
           >
-            <span className="app-need__label">{need.label}</span>
+            <span className="app-need__label">{need.label ?? "Dépense"}</span>
             <span className="app-need__meta">
-              <PriorityTag priority={need.priority} />
+              {need.recurring ? <span className="app-need__recur">↻</span> : null}
+              <span className="app-need__date">{need.date.slice(5).replace("-", "/")}</span>
             </span>
             <span className="app-need__amount">{formatF(need.amount)}</span>
             <button
               type="button"
               className="app-iconbtn"
-              aria-label={`Supprimer ${need.label}`}
-              onClick={() => deleteNeed(need.id)}
+              aria-label={`Supprimer ${need.label ?? "cette dépense"}`}
+              onClick={() => removeOutflow(need.id)}
             >
               <Trash2 size={18} aria-hidden />
             </button>
@@ -90,21 +86,21 @@ export default function NeedsList() {
           <input
             className="app-input app-input--date"
             type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
           />
         </div>
 
-        <div className="app-need-form__prios" role="group" aria-label="Priorité">
-          {PRIORITIES.map((p) => (
+        <div className="app-need-form__prios" role="group" aria-label="Récurrence">
+          {RECUR.map((r) => (
             <button
-              key={p.id}
+              key={r.label}
               type="button"
-              className={`pill app-prio-pick${priority === p.id ? " app-prio-pick--on" : ""}`}
-              aria-pressed={priority === p.id}
-              onClick={() => setPriority(p.id)}
+              className={`pill app-prio-pick${recurring === r.id ? " app-prio-pick--on" : ""}`}
+              aria-pressed={recurring === r.id}
+              onClick={() => setRecurring(r.id)}
             >
-              {p.label}
+              {r.label}
             </button>
           ))}
         </div>
