@@ -1,5 +1,6 @@
 :root {
-  /* Colors (light) — docs/DESIGN.md §1, single source of truth */
+  /* Colors (light) — docs/DESIGN.md §1, single source of truth.
+     Green is the ONLY vivid accent. No pink/peach anywhere. */
   --bg: #f7f6f4;
   --bg-2: #efece8;
   --surface: #ffffff;
@@ -7,24 +8,24 @@
   --ink-soft: #6b6b70;
   --grey: #9a9a9e;
   --grey-light: #e4e3e1;
-  --accent-green: #3c6e71; /* "ça va", succès, montants positifs */
-  --accent: #e0afa0; /* rose pêche : action, marque */
-  --accent-soft: #f3dcd3;
+  --accent: #3c6e71; /* green: primary action, active states, success */
+  --accent-soft: #dde9e9;
   --warn: #b4532a; /* "ça ne va pas", manque d'argent */
 
-  /* Backwards-compatible aliases for legacy css (app.css, landing.css).
-     New code should reference --grey / --warn / --accent-green directly. */
+  /* Backwards-compatible aliases for legacy css (app.css, landing.css,
+     base.css). New code should reference --grey / --warn / --accent. */
   --silver: var(--grey);
   --silver-dark: var(--ink-soft);
   --danger: var(--warn);
-  --ok: var(--accent-green);
+  --ok: var(--accent);
+  --accent-green: var(--accent);
 
   /* Liquid glass — docs/DESIGN.md §2 */
   --glass-bg: rgba(255, 255, 255, 0.55);
   --glass-border: rgba(255, 255, 255, 0.6);
   --glass-blur: blur(20px) saturate(160%);
   --glass-blur-soft: blur(10px);
-  --glow-accent: rgba(224, 175, 160, 0.45); /* peach halo */
+  --glow-accent: rgba(60, 110, 113, 0.35); /* green halo */
 
   /* Shape and elevation */
   --radius: 20px;
@@ -57,17 +58,17 @@
     --ink-soft: #a9acb1;
     --grey: #7d8086;
     --grey-light: #2a2d31;
-    --accent-green: #4d8a8d;
-    --accent: #e0afa0;
-    --accent-soft: rgba(224, 175, 160, 0.22);
+    --accent: #4d8a8d;
+    --accent-soft: rgba(77, 138, 141, 0.2);
     --warn: #e08a5f;
     --silver: var(--grey);
     --silver-dark: var(--ink-soft);
     --danger: var(--warn);
-    --ok: var(--accent-green);
+    --ok: var(--accent);
+    --accent-green: var(--accent);
     --glass-bg: rgba(31, 34, 38, 0.55);
     --glass-border: rgba(255, 255, 255, 0.08);
-    --glow-accent: rgba(224, 175, 160, 0.3);
+    --glow-accent: rgba(77, 138, 141, 0.25);
     --shadow-float: 0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 }
@@ -81,16 +82,16 @@
   --ink-soft: #a9acb1;
   --grey: #7d8086;
   --grey-light: #2a2d31;
-  --accent-green: #4d8a8d;
-  --accent: #e0afa0;
-  --accent-soft: rgba(224, 175, 160, 0.22);
+  --accent: #4d8a8d;
+  --accent-soft: rgba(77, 138, 141, 0.2);
   --warn: #e08a5f;
   --silver: var(--grey);
   --silver-dark: var(--ink-soft);
   --danger: var(--warn);
-  --ok: var(--accent-green);
+  --ok: var(--accent);
+  --accent-green: var(--accent);
   --glass-bg: rgba(31, 34, 38, 0.55);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glow-accent: rgba(224, 175, 160, 0.3);
+  --glow-accent: rgba(77, 138, 141, 0.25);
   --shadow-float: 0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
 }
