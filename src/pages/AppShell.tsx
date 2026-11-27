@@ -13,6 +13,9 @@ import "../components/app/app.css";
 // The authenticated shell. Full-screen, not a centered card: a fixed left sidebar
 // on desktop (>= 768px) and a floating .glass-nav on mobile, with the content
 // filling the rest of the screen. No motion here (that is task 09).
+//
+// The nested <Routes> use RELATIVE paths because this shell is mounted under the
+// layout path "/app/*" in App.tsx; the nav links use the absolute "/app/*" paths.
 export default function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const openSettings = () => setSettingsOpen(true);
@@ -24,7 +27,7 @@ export default function AppShell() {
 
         <main className="app-main">
           <header className="app-mobile-header">
-            <Link to="/" className="app-mobile-header__brand">
+            <Link to="/app" className="app-mobile-header__brand">
               <span className="app-mobile-header__mark">N</span>
               <span className="app-mobile-header__wordmark">Naya</span>
             </Link>
@@ -32,19 +35,19 @@ export default function AppShell() {
 
           <div className="app-scroll">
             <Routes>
-              <Route path="/" element={<Accueil />} />
-              <Route path="/saisie" element={<Saisie />} />
-              <Route path="/dettes" element={<Dettes />} />
+              <Route path="" element={<Accueil />} />
+              <Route path="saisie" element={<Saisie />} />
+              <Route path="dettes" element={<Dettes />} />
               <Route
-              path="/prevision"
-              element={
-                <Placeholder
-                  title="Prévision"
-                  message="Très bientôt : Naya vous dira, jour par jour, si vous avez de quoi tenir."
-                />
-              }
-            />
-              <Route path="*" element={<Navigate to="/" replace />} />
+                path="prevision"
+                element={
+                  <Placeholder
+                    title="Prévision"
+                    message="Très bientôt : Naya vous dira, jour par jour, si vous avez de quoi tenir."
+                  />
+                }
+              />
+              <Route path="*" element={<Navigate to="/app" replace />} />
             </Routes>
           </div>
         </main>

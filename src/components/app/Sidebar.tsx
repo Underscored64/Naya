@@ -11,10 +11,10 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Accueil", to: "/", icon: Home },
-  { label: "Saisie", to: "/saisie", icon: PenLine },
-  { label: "Dettes", to: "/dettes", icon: Users },
-  { label: "Prévision", to: "/prevision", icon: TrendingUp },
+  { label: "Accueil", to: "/app", icon: Home },
+  { label: "Saisie", to: "/app/saisie", icon: PenLine },
+  { label: "Dettes", to: "/app/dettes", icon: Users },
+  { label: "Prévision", to: "/app/prevision", icon: TrendingUp },
 ];
 
 // The desktop left sidebar (>= 768px). Brand on top, the primary nav in the
