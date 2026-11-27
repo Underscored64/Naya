@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../hooks/useTheme";
 import { supabase } from "../../lib/supabase";
 
-// Settings panel: sign out + reset the demo (tâche 01 demo data only, until the
-// real data layer lands).
+// The settings sheet. On real accounts there is no "réinitialiser la démo": the
+// account is real, so the sheet holds the theme toggle and sign-out. Reuses the
+// existing .sheet / .settings-action styles (app.css).
 export default function SettingsSheet({
   open,
   onClose,
-  onReset,
 }: {
   open: boolean;
   onClose: () => void;
-  onReset: () => void;
 }) {
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
   const [busy, setBusy] = useState(false);
 
   const signOut = async () => {
@@ -36,20 +37,29 @@ export default function SettingsSheet({
       <section
         className="glass-card sheet"
         role="dialog"
-        aria-label="Réglages"
+        aria-modal="true"
+        aria-label="Paramètres"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sheet__row">
-          <span className="sheet__row-title">Réglages</span>
+          <span className="sheet__row-title">Paramètres</span>
+        </div>
+
+        <div className="sheet__row">
+          <span className="sheet__row-title">Apparence</span>
           <button
             type="button"
-            className="app-iconbtn"
-            onClick={onClose}
-            aria-label="Fermer les réglages"
+            className="settings-action"
+            onClick={toggle}
+            aria-pressed={theme === "dark"}
           >
-            ✕
+            {theme === "dark" ? "Thème clair" : "Thème sombre"}
           </button>
         </div>
+
+        <p className="app-settings-privacy">
+          Vos données restent privées sur votre appareil et ne sont jamais vendues.
+        </p>
 
         <button
           type="button"
@@ -58,17 +68,6 @@ export default function SettingsSheet({
           disabled={busy}
         >
           {busy ? "Déconnexion…" : "Se déconnecter"}
-        </button>
-
-        <button
-          type="button"
-          className="settings-action"
-          onClick={() => {
-            onReset();
-            onClose();
-          }}
-        >
-          Réinitialiser la démo
         </button>
       </section>
     </div>

@@ -1,67 +1,57 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Sparkles, Settings } from "lucide-react";
-import { AppStateProvider, useAppState } from "../data/state";
-import TabBar, { type TabId } from "../components/app/TabBar";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
+import Sidebar from "../components/app/Sidebar";
+import TabBar from "../components/app/TabBar";
 import Accueil from "../components/app/Accueil";
-import NeedsList from "../components/app/NeedsList";
-import SettingsSheet from "../components/app/SettingsSheet";
+import Saisie from "../components/app/Saisie";
+import Dettes from "../components/app/Dettes";
 import Placeholder from "../components/app/Placeholder";
+import SettingsSheet from "../components/app/SettingsSheet";
+import RequireAuth from "../components/app/RequireAuth";
 import "../components/app/app.css";
 
-function Screen({ tab }: { tab: TabId }) {
-  switch (tab) {
-    case "accueil":
-      return (
-        <>
-          <Accueil />
-          <NeedsList />
-        </>
-      );
-    case "saisie":
-      return <Placeholder title="Saisie" message="À venir (tâche 07) : dictez vos ventes et dettes, puis validez." />;
-    case "prevision":
-      return <Placeholder title="Prévision" message="À venir (tâche 08) : votre solde jour par jour, avec les zones rouges." />;
-    case "dettes":
-      return <Placeholder title="Dettes" message="À venir (tâche 10) : relancez vos clients par WhatsApp." />;
-  }
-}
-
-function Shell() {
-  const [tab, setTab] = useState<TabId>("accueil");
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const { reset } = useAppState();
-
-  return (
-    <div className="app-shell">
-      <header className="app-topbar">
-        <Link to="/" className="app-topbar__brand">
-          <Sparkles size={18} aria-hidden /> Naya
-        </Link>
-        <button
-          type="button"
-          className="app-iconbtn"
-          aria-label="Réglages"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Settings size={20} aria-hidden />
-        </button>
-      </header>
-
-      <main className="container app-content">
-        <Screen tab={tab} />
-      </main>
-
-      <TabBar active={tab} onSelect={setTab} />
-      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} onReset={reset} />
-    </div>
-  );
-}
-
+// The authenticated shell. Full-screen, not a centered card: a fixed left sidebar
+// on desktop (>= 768px) and a floating .glass-nav on mobile, with the content
+// filling the rest of the screen. No motion here (that is task 09).
 export default function AppShell() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const openSettings = () => setSettingsOpen(true);
+
   return (
-    <AppStateProvider>
-      <Shell />
-    </AppStateProvider>
+    <RequireAuth>
+      <div className="app-shell">
+        <Sidebar onOpenSettings={openSettings} />
+
+        <main className="app-main">
+          <header className="app-mobile-header">
+            <Link to="/" className="app-mobile-header__brand">
+              <span className="app-mobile-header__mark">N</span>
+              <span className="app-mobile-header__wordmark">Naya</span>
+            </Link>
+          </header>
+
+          <div className="app-scroll">
+            <Routes>
+              <Route path="/" element={<Accueil />} />
+              <Route path="/saisie" element={<Saisie />} />
+              <Route path="/dettes" element={<Dettes />} />
+              <Route
+              path="/prevision"
+              element={
+                <Placeholder
+                  title="Prévision"
+                  message="Très bientôt : Naya vous dira, jour par jour, si vous avez de quoi tenir."
+                />
+              }
+            />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </main>
+
+        <TabBar onOpenSettings={openSettings} />
+        <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      </div>
+    </RequireAuth>
   );
 }

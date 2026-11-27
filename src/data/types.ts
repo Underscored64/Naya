@@ -36,6 +36,7 @@ export interface Sale {
   paymentMethod: PaymentMethod;
   note?: string | null;
   source: SaleSource;
+  createdAt?: string; // "YYYY-MM-DDTHH:MM..." from the DB, when present
   deletedAt?: string | null;
 }
 
@@ -47,6 +48,7 @@ export interface Expense {
   paymentMethod: PaymentMethod;
   note?: string | null;
   source: SaleSource;
+  createdAt?: string; // "YYYY-MM-DDTHH:MM..." from the DB, when present
   deletedAt?: string | null;
 }
 

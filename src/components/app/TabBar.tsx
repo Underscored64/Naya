@@ -1,55 +1,43 @@
-import { Home, PenLine, LineChart, Users } from "lucide-react";
-import type { CSSProperties } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Settings } from "lucide-react";
+import { NAV_ITEMS } from "./Sidebar";
 
-export type TabId = "accueil" | "saisie" | "prevision" | "dettes";
-
-interface Tab {
-  id: TabId;
-  label: string;
-  Icon: typeof Home;
-}
-
-export const TABS: Tab[] = [
-  { id: "accueil", label: "Accueil", Icon: Home },
-  { id: "saisie", label: "Saisie", Icon: PenLine },
-  { id: "prevision", label: "Prévision", Icon: LineChart },
-  { id: "dettes", label: "Dettes", Icon: Users },
-];
-
-export default function TabBar({
-  active,
-  onSelect,
-}: {
-  active: TabId;
-  onSelect: (id: TabId) => void;
-}) {
-  const index = Math.max(0, TABS.findIndex((tab) => tab.id === active));
+// The mobile bottom bar (docs/DESIGN.md §6: ".glass-nav", the primary nav in one
+// row). It shows the four primary screens; Paramètres is an icon-only button at
+// the end (no label) that opens the sheet. Hidden on desktop, where the sidebar
+// handles navigation.
+export default function TabBar({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const { pathname } = useLocation();
 
   return (
-    <nav className="app-tabbar" aria-label="Navigation de l'application">
-      {/* Sliding active background: moves via translateX instead of flashing. */}
-      <span
-        className="app-tabbar__indicator"
-        style={{ "--tab-count": TABS.length, "--tab-index": index } as CSSProperties}
-        aria-hidden
-      />
-      {TABS.map((tab) => {
-        const isActive = active === tab.id;
+    <nav className="glass-nav" aria-label="Navigation">
+      {NAV_ITEMS.map((item) => {
+        const active = pathname === item.to;
         return (
-          <button
-            key={tab.id}
-            type="button"
-            className={`app-tab${isActive ? " app-tab--active" : ""}`}
-            aria-current={isActive ? "page" : undefined}
-            onClick={() => onSelect(tab.id)}
+          <Link
+            key={item.label}
+            to={item.to ?? "/"}
+            className={`glass-nav__item ${active ? "is-active" : ""}`}
+            aria-current={active ? "page" : undefined}
           >
-            <span className={`icon-pill${isActive ? " icon-pill--active" : ""}`}>
-              <tab.Icon size={20} aria-hidden />
+            <span className="icon-pill">
+              <item.icon size={18} aria-hidden />
             </span>
-            <span className="app-tab__label">{tab.label}</span>
-          </button>
+            <span className="glass-nav__label">{item.label}</span>
+          </Link>
         );
       })}
+
+      <button
+        type="button"
+        className="glass-nav__item glass-nav__item--icon"
+        aria-label="Paramètres"
+        onClick={onOpenSettings}
+      >
+        <span className="icon-pill">
+          <Settings size={18} aria-hidden />
+        </span>
+      </button>
     </nav>
   );
 }

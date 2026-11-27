@@ -1,77 +1,218 @@
 /* App screens — "notifications-first" home. Tokens from styles/tokens.css,
    glass/motion classes from styles/base.css. docs/DESIGN.md §7, §2, §5, §4. */
 
-.app-layout {
+/* ---- App shell: full-screen, not a centered card (docs/DESIGN.md §6, task 08)
+   Fixed left sidebar on desktop (>= 768px), floating .glass-nav on mobile, the
+   content filling the rest of the screen. Structure only — no motion (task 09). */
+.app-shell {
+  min-height: 100vh;
   min-height: 100dvh;
+  display: flex;
+}
+
+/* The fixed left sidebar (desktop only). */
+.app-sidebar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .app-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 232px;
+    flex-shrink: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: var(--space-4) var(--space-3);
+    gap: var(--space-2);
+    border-right: 1px solid var(--glass-border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+  }
+}
+
+.app-sidebar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-3);
+}
+
+.app-sidebar__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.app-sidebar__wordmark {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  color: var(--ink);
+}
+
+.app-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+/* A nav row shared by the sidebar and (label-less) the mobile bar. */
+.app-navitem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border-radius: var(--radius-row);
+  color: var(--ink-soft);
+  text-decoration: none;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.app-navitem.is-active {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.app-navitem__label {
+  font-size: 0.95rem;
+}
+
+/* Paramètres sits at the bottom of the sidebar. */
+.app-navitem--settings {
+  margin-top: auto;
+  border-top: 1px solid var(--glass-border);
+  padding-top: var(--space-3);
+}
+
+/* The content column fills the screen beside the sidebar / above the bar. */
+.app-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-.app-main {
+/* A small mobile-only header (the brand); hidden on desktop, where the sidebar
+   carries it. */
+.app-mobile-header {
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-1);
+}
+
+@media (min-width: 768px) {
+  .app-mobile-header {
+    display: none;
+  }
+}
+
+.app-mobile-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink);
+}
+
+.app-mobile-header__mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+}
+
+.app-mobile-header__wordmark {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+
+/* The scrolling content column, centred and bounded on wide screens. */
+.app-scroll {
   flex: 1;
-  max-width: 560px;
   width: 100%;
+  max-width: 960px;
   margin: 0 auto;
-  padding: var(--space-4) var(--space-4) 112px;
+  padding: var(--space-4);
+}
+
+@media (max-width: 767px) {
+  /* Room so the floating bottom bar never hides the last item. */
+  .app-scroll {
+    padding-bottom: calc(var(--space-6, 96px) + var(--space-3));
+  }
+}
+
+/* Mobile floating bar — only the .glass-nav. Hidden on desktop. */
+.glass-nav {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: var(--space-2);
+  z-index: 50;
+}
+
+@media (min-width: 768px) {
+  .glass-nav {
+    display: none;
+  }
+}
+
+.glass-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 52px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.glass-nav__item.is-active {
+  color: var(--accent);
+}
+
+/* Paramètres is an icon-only button at the end of the bar. */
+.glass-nav__item--icon {
+  justify-content: center;
+}
+
+.glass-nav__label {
+  font-size: 11px;
+  line-height: 1.1;
 }
 
 .app-screen {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-}
-
-/* ---- Tab bar with a sliding active background (docs/DESIGN.md §5) ---- */
-.app-tabbar {
-  position: fixed;
-  left: var(--space-4);
-  right: var(--space-4);
-  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  padding: var(--space-2);
-  z-index: 50;
-}
-
-.app-tabbar__indicator {
-  position: absolute;
-  top: var(--space-2);
-  bottom: var(--space-2);
-  left: var(--space-2);
-  width: calc((100% - var(--space-2) * 2) / var(--tab-count));
-  border-radius: var(--radius-row);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-float);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
-  backdrop-filter: var(--glass-blur-soft);
-  /* Slide, never fade, between tabs. */
-  transform: translateX(calc(var(--tab-index) * 100%));
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.app-tab {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-height: 56px;
-  border: 0;
-  background: transparent;
-  color: var(--ink-soft);
-  padding: 4px 0;
-}
-
-.app-tab--active {
-  color: var(--accent);
-}
-
-.app-tab__label {
-  font-size: 11px;
-  line-height: 1.1;
-  font-weight: 500;
 }
 
 /* ---- Accueil: notifications first (docs/DESIGN.md §7) ---- */
@@ -465,4 +606,285 @@
 
 .settings-action--danger:hover {
   background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+/* ---- Saisie: entry forms + today's lists (task 06) ---- */
+.app-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+}
+
+.app-entry__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.app-entry__row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.app-entry__row .app-field {
+  flex: 1;
+}
+
+.app-entry__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.app-entry__submit {
+  align-self: stretch;
+  justify-content: center;
+  display: inline-flex;
+  gap: var(--space-2);
+}
+
+/* "Nouveau client" link under the client select. */
+.app-entry__newclient {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.app-entry__newclient:hover {
+  text-decoration: underline;
+}
+
+/* Inline fields: a small label + control. */
+.app-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.82rem;
+}
+
+.app-field__label {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.app-field__hint {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.app-input {
+  background: var(--surface);
+  border: 1px solid var(--grey-light);
+  border-radius: var(--radius-row);
+  padding: var(--space-3);
+  font: inherit;
+  color: var(--ink);
+}
+
+.app-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.app-input--amount {
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+}
+
+/* Today's lists. */
+.app-today {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+}
+
+.app-today__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: var(--font-display);
+  color: var(--ink);
+}
+
+.app-today__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.app-today__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+}
+
+.app-today__label {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+.app-today__amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.app-today__empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 520px) {
+  .app-entry__row {
+    flex-direction: column;
+  }
+}
+
+/* ---- Dettes screen (task 07) ---- */
+
+.app-debts__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.app-debts__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-debts__label {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.app-debts__total {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-debts__add {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 var(--space-4);
+}
+
+.app-debts__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.app-debt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.app-debt__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-debt__name {
+  font-weight: 600;
+}
+
+.app-debt__phone {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.app-debt__amount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* A client who owes nothing is shown discreetly, never as an error. */
+.app-debt__figure {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-debt__settled {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.app-debt__repay {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  font-size: 0.85rem;
+}
+
+/* ---- Modal (task 07: add client / record repayment) ---- */
+
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, #000 40%, transparent);
+}
+
+.app-modal {
+  width: 100%;
+  max-width: 380px;
+}
+
+.app-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.app-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.app-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.app-modal__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
 }
